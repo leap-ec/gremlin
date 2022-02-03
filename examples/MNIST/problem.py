@@ -11,7 +11,7 @@ from leap_ec.problem import ScalarProblem
 from numpy import nan
 
 
-class MNIST_Problem(ScalarProblem):
+class MNISTProblem(ScalarProblem):
     ''' LEAP Problem subclass that encapsulates a pytorch LeNet style model
         inference used to evaluate how well it can recognize numbers.
     '''
