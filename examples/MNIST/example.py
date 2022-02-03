@@ -1,5 +1,5 @@
 '''
-MNIST_example.py
+example.py
 
 MNIST occlusion problem.
 
