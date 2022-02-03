@@ -171,8 +171,8 @@ def run(config):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description=('Gremlin is a machine learning model evaluator. Find out'
-                     ' where your model performs poorly.'))
+        description=('Gremlin finds features sets where a given machine '
+                     'learning model performs poorly.'))
     parser.add_argument('-d', '--debug',
                         default=False, action='store_true',
                         help=('set debug flag to monitor values during a run'))
