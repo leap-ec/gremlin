@@ -1,23 +1,28 @@
-# Gremlin
+# Gremlin discovers biases or weaknesses in machine learners
 
-Gremlin is a machine learning model evaluator. Find out where your model performs poorly.
+Gremlin learns where a given machine learner (ML) model performs poorly via an
+adversarial evolutionary algorithm (EA).  The EA will find the worst 
+performing feature sets such that a practitioner can then, say, tune the 
+training data to include more examples of those feature sets.  Then the ML
+model can be trained again with the updated training set in the hopes that 
+the additional examples will be sufficient for the ML to train models that 
+perform better for those sets.
 
 ## Requires
 * Python 3.[78]
-* LEAP (https://github.com/AureumChaos/LEAP)
+* [LEAP https://github.com/AureumChaos/LEAP](https://github.com/AureumChaos/LEAP)
 
-## How it works
-It utilizes an adversarial evolutionary algorithm (EA) to find features where a model
-performs poorly. The intent is for the user to leverage that information to tune training
-data for subsequent model retraining to improve performance in those poor performing situations.
 
 ## Configuration
-At a bare minimum, Gremlin needs an algorithm, a `Problem`, and a `Representation`. The
-`Problem` and `Representation` should inherit from `leap_ec.problem.Problem` and
-`leap_ec.representation.Representation`, respectively. The model to evaluate should be
-handled within the custom `Problem` class.
+Gremlin is essentially a thin convenience wrapper around [LEAP]
+(https://github.com/AureumChaos/LEAP).  Instead of writing a script in LEAP, 
+one would instead point the `gremlin` executable at a YAML file that describes 
+what LEAP classes, subclasses, and functions to use, as well as other salient 
+run-time characteristics. `gremlin` will parse the YAML file and generate a 
+CSV file containing the individuals from the run.  This CSV file should 
+contain information that can be exploited to tune training data.
 
-Example configuration:
+Example Gremlin configuration YAML:
 
 ```
 evolution:
