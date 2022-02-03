@@ -21,9 +21,7 @@ import torch.optim as optim
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 
-from MNIST_example import LeNet
-
-sys.path.append('.')
+from example import LeNet
 
 
 # max number of rows/columns to occlude
@@ -60,94 +58,71 @@ def alter_image(img, exclude=[], probabilities=None):
     return copy_img
 
 
-# options are {train, eval} PATH
-data_dir = './data/'
-if not os.path.exists(data_dir):
-    os.mkdir(data_dir)
+if __name__ == '__main__':
 
-# enable CUDA
-if torch.cuda.is_available():
-    device = 'cuda'
-else:
-    device = 'cpu'
+    # options are {train, eval} PATH
+    data_dir = './data/'
+    if not os.path.exists(data_dir):
+        os.mkdir(data_dir)
 
-# download data
-train_dataset = MNIST(data_dir, transform=ToTensor(),
-                      train=True, download=True)
-test_dataset = MNIST(data_dir, transform=ToTensor(),
-                     train=False, download=True)
+    # enable CUDA
+    if torch.cuda.is_available():
+        device = 'cuda'
+    else:
+        device = 'cpu'
 
-# train a CNN on MNIST
-batch_size = 100
-train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
-                                           batch_size=batch_size,
-                                           shuffle=True)
-test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
-                                          shuffle=True)
+    # download data
+    train_dataset = MNIST(data_dir, transform=ToTensor(),
+                          train=True, download=True)
+    test_dataset = MNIST(data_dir, transform=ToTensor(),
+                         train=False, download=True)
 
-print(f'Training CNN model with {EXCLUDE} rows/cols excluded')
-model = LeNet().to(device)
-optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
-loss_func = nn.CrossEntropyLoss()
+    # train a CNN on MNIST
+    batch_size = 100
+    train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
+                                               batch_size=batch_size,
+                                               shuffle=True)
+    test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
+                                              shuffle=True)
 
-for epoch in tqdm(range(5)):
-    for i, (x, target) in enumerate(train_loader):
-        altered_images = []
-        labels = []
-        for img, label in zip(x, target):
-            altered_img = alter_image(img, exclude=EXCLUDE)
-            altered_images.append(altered_img)
-            labels.append(label)
-        altered_images = torch.stack(altered_images)
-        labels = torch.stack(labels)
+    print(f'Training CNN model with {EXCLUDE} rows/cols excluded')
+    model = LeNet().to(device)
+    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+    loss_func = nn.CrossEntropyLoss()
 
-        x = torch.cat((x, altered_images))
-        target = torch.cat((target, labels))
+    for epoch in tqdm(range(5)):
+        for i, (x, target) in enumerate(train_loader):
+            altered_images = []
+            labels = []
+            for img, label in zip(x, target):
+                altered_img = alter_image(img, exclude=EXCLUDE)
+                altered_images.append(altered_img)
+                labels.append(label)
+            altered_images = torch.stack(altered_images)
+            labels = torch.stack(labels)
 
-        optimizer.zero_grad()
-        x = x.to(device)
-        target = target.to(device)
-        pred = model(x)
-        loss = loss_func(pred, target)
-        loss.backward()
-        optimizer.step()
+            x = torch.cat((x, altered_images))
+            target = torch.cat((target, labels))
 
-print(f'Saving model to {data_dir + "model.pt"}...', end='')
-torch.save({'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'loss': loss}, data_dir + 'model.pt')
-print('model saved.')
-model.eval()
+            optimizer.zero_grad()
+            x = x.to(device)
+            target = target.to(device)
+            pred = model(x)
+            loss = loss_func(pred, target)
+            loss.backward()
+            optimizer.step()
 
-print('Testing on normal test set')
-correct = 0
-total = 0
-for i, (x, target) in enumerate(test_loader):
-    x = x.to(device)
-    target = target.to(device)
-    pred = model(x)
-    _, pred_label = torch.max(pred.data, 1)
-    total += x.data.size()[0]
-    correct += (pred_label == target.data).sum()
+    print(f'Saving model to {data_dir + "model.pt"}...', end='')
+    torch.save({'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': loss}, data_dir + 'model.pt')
+    print('model saved.')
+    model.eval()
 
-print(f'Normal Test Set Accuracy: {correct / total}')
-print('Testing on altered dataset for multiple epochs')
-
-correct = 0
-total = 0
-# repeat many times to account for randomness
-# in occlusion patterns
-for e in tqdm(range(1)):
+    print('Testing on normal test set')
+    correct = 0
+    total = 0
     for i, (x, target) in enumerate(test_loader):
-        altered_images = []
-        labels = []
-        for img, label in zip(x, target):
-            altered_img = alter_image(img)
-            altered_images.append(altered_img)
-            labels.append(label)
-        x = torch.stack(altered_images)
-        target = torch.stack(labels)
-
         x = x.to(device)
         target = target.to(device)
         pred = model(x)
@@ -155,4 +130,29 @@ for e in tqdm(range(1)):
         total += x.data.size()[0]
         correct += (pred_label == target.data).sum()
 
-print(f'Altered Test Set Accuracy: {correct / total}')
+    print(f'Normal Test Set Accuracy: {correct / total}')
+    print('Testing on altered dataset for multiple epochs')
+
+    correct = 0
+    total = 0
+    # repeat many times to account for randomness
+    # in occlusion patterns
+    for e in tqdm(range(1)):
+        for i, (x, target) in enumerate(test_loader):
+            altered_images = []
+            labels = []
+            for img, label in zip(x, target):
+                altered_img = alter_image(img)
+                altered_images.append(altered_img)
+                labels.append(label)
+            x = torch.stack(altered_images)
+            target = torch.stack(labels)
+
+            x = x.to(device)
+            target = target.to(device)
+            pred = model(x)
+            _, pred_label = torch.max(pred.data, 1)
+            total += x.data.size()[0]
+            correct += (pred_label == target.data).sum()
+
+    print(f'Altered Test Set Accuracy: {correct / total}')
