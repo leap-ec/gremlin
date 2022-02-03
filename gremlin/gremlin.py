@@ -214,11 +214,17 @@ def parse_config(config):
     pop_size = int(config.pop_size)
     max_generations = int(config.max_generations)
 
-    importlib.import_module(config.problem)
-    importlib.import_module(config.representation)
+    # The problem and represenations will be something like
+    # problem.MNIST_Problem, in the config and we just want to import
+    # problem. So we snip out "problem" from that string and import that.
+    problem_module = importlib.import_module(config.problem.split('.')[0])
+    representation_module = importlib.import_module(config.representation.split('.')[0])
 
-    problem_class = eval(config.problem + '()')
-    representation_class = eval(config.representation + '()')
+    problem_class = problem_module.MNIST_Problem()
+    representation_class = representation_module.MNISTRepresentation()
+
+    # problem_class = eval(config.problem + '()', globals(), locals())
+    # representation_class = eval(config.representation + '()', globals(), locals())
 
     return pop_size, max_generations, problem_class, representation_class
 
