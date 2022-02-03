@@ -1,5 +1,5 @@
 '''
-example.py
+pytorch_lenet.py
 
 MNIST occlusion problem.
 

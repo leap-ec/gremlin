@@ -21,7 +21,7 @@ import torch.optim as optim
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 
-from example import LeNet
+from pytorch_lenet import LeNet
 
 
 # max number of rows/columns to occlude
