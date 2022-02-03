@@ -25,7 +25,7 @@ class MNISTDecoder(Decoder):
 
         :returns: named tuple of phenotypic traits
         """
-        phenome = MNISTPhenotype(digit=genome[0]))
+        phenome = MNISTPhenotype(digit=genome[0])
 
         return phenome
 
@@ -42,3 +42,5 @@ class MNISTRepresentation(Representation):
             initialize=create_int_vector(MNISTRepresentation.genome_bounds),
             decoder=MNISTDecoder(),
             individual_cls=RobustIndividual)
+        # We use RobustIndividual because that handles any exceptions thrown
+        # during evaluation.
