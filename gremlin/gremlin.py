@@ -204,6 +204,25 @@ def run(config):
     logger.debug('Done.')
 
 
+def parse_config(config):
+    """ Extract the population size, maximum generations to run, the Problem
+    subclass, and the Representation subclass from the given `config` object.
+
+    :param config: OmegaConf configurations read from YAML files
+    :returns: pop_size, max_generations, Problem class, and Representation class
+    """
+    pop_size = int(config.pop_size)
+    max_generations = int(config.max_generations)
+
+    importlib.import_module(config.problem)
+    importlib.import_module(config.representation)
+
+    problem_class = eval(config.problem + '()')
+    representation_class = eval(config.representation + '()')
+
+    return pop_size, max_generations, problem_class, representation_class
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description=('Gremlin finds features sets where a given machine '
@@ -222,9 +241,13 @@ if __name__ == '__main__':
         logger.debug('Logging set to DEBUG.')
 
     # combine configuration files into one dictionary
-
     config = read_config_files(args.config_files)
     logger.debug(f'Configuration: {config}')
 
-    # # run gremlin algorithm
-    # run(config)
+    # Import the Problem and Representation classes specified in the
+    # config file(s) as well as the pop size and max generations.
+    pop_size, max_generations, problem_class, representation_class = parse_config(config)
+
+    # Then run leap_ec.generational_ea() with those classes while writing
+    # the output to CSV and other, ancillary files.
+    pass # TODO write this
