@@ -75,6 +75,26 @@ def check_config(config):
                           f'Full config: {config}'))
 
 
+def read_config_files(config_files):
+    """  Read one or more YAML files containing configuration options.
+
+    The notion is that you can have a set of YAML files for controlling the
+    configuration, such as having a set of default global settings that are
+    overridden or extended by subsequent configuration files.
+
+    E.g.,
+
+    gremlin.py general.yaml this_model.yaml
+
+    :param config_files: command line arguments
+    :return: config object of current config
+    """
+    serial_configs = [OmegaConf.load(x) for x in config_files]
+    config = OmegaConf.merge(*serial_configs)
+
+    return config
+
+
 def dynamic_import(name):
     '''
     Dynamically import a class or function from a string in
