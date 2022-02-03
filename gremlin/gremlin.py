@@ -17,11 +17,26 @@ import importlib
 from tqdm import tqdm
 from omegaconf import OmegaConf
 
+from rich.logging import RichHandler
+
+# Create unique logger for this namespace
+rich_handler = RichHandler(rich_tracebacks=True,
+                           markup=True)
+logging.basicConfig(level='INFO', format='%(message)s',
+                    datefmt="[%Y/%m/%d %H:%M:%S]",
+                    handlers=[rich_handler])
+logger = logging.getLogger(__name__)
+
+from rich.table import Table
+from rich import print
+from rich import pretty
+pretty.install()
+
+from rich.traceback import install
+install()
+
 import analysis
 
-logging.basicConfig()
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 def check_config(config):
