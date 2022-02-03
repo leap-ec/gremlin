@@ -10,6 +10,10 @@ Custom classes can be specified in the configuration.
 See <insert link to examples directory on code.ornl.gov>
 """
 import sys
+
+# So we can pick up local modules defined in the YAML config file.
+sys.path.append('.')
+
 import argparse
 import logging
 import importlib
@@ -259,3 +263,5 @@ if __name__ == '__main__':
     # Then run leap_ec.generational_ea() with those classes while writing
     # the output to CSV and other, ancillary files.
     pass # TODO write this
+
+    logger.info('Run finished.')
