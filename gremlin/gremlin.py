@@ -209,24 +209,26 @@ def parse_config(config):
     subclass, and the Representation subclass from the given `config` object.
 
     :param config: OmegaConf configurations read from YAML files
-    :returns: pop_size, max_generations, Problem class, and Representation class
+    :returns: pop_size, max_generations, Problem objects, and Representation objects
     """
     pop_size = int(config.pop_size)
     max_generations = int(config.max_generations)
 
-    # The problem and represenations will be something like
+    # The problem and representations will be something like
     # problem.MNIST_Problem, in the config and we just want to import
     # problem. So we snip out "problem" from that string and import that.
     problem_module = importlib.import_module(config.problem.split('.')[0])
     representation_module = importlib.import_module(config.representation.split('.')[0])
 
-    problem_class = problem_module.MNIST_Problem()
-    representation_class = representation_module.MNISTRepresentation()
+    # Now snip out the class that was specified in the config file so that we
+    # can properly instantiate that.
+    problem_class = config.problem.split('.')[1]
+    representation_class = config.representation.split('.')[1]
 
-    # problem_class = eval(config.problem + '()', globals(), locals())
-    # representation_class = eval(config.representation + '()', globals(), locals())
+    problem = eval(f'problem_module.{problem_class}()')
+    representation = eval(f'representation_module.{representation_class}()')
 
-    return pop_size, max_generations, problem_class, representation_class
+    return pop_size, max_generations, problem, representation
 
 
 if __name__ == '__main__':
@@ -252,7 +254,7 @@ if __name__ == '__main__':
 
     # Import the Problem and Representation classes specified in the
     # config file(s) as well as the pop size and max generations.
-    pop_size, max_generations, problem_class, representation_class = parse_config(config)
+    pop_size, max_generations, problem, representation = parse_config(config)
 
     # Then run leap_ec.generational_ea() with those classes while writing
     # the output to CSV and other, ancillary files.
