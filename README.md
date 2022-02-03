@@ -24,7 +24,7 @@ contain information that can be exploited to tune training data.
 
 Example Gremlin configuration YAML:
 
-```
+```yaml
 evolution:
     name: leap_ec.algorithm.generational_ea *or* custom_generator_function
     params:
