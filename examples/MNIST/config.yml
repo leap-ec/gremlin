@@ -1,60 +1,8 @@
-# Configuration file for Gremlin
+# Gremlin config file for MNIST example
+#
 # Usage:
-#   $ gremlin config.yml [optional.yml]
-
-# these variables are defined in multiple places
-pop_size: 50
-bounds: [[0, 55], [0, 55], [0, 55], [0, 55], [0, 55], [0, 55]]
-
-
-# this defines the evolutionary algorithm and its parameters
-evolution:
-  name: leap_ec.algorithm.generational_ea
-  params:
-    max_generations: 30
-    pop_size: ${pop_size}
-    problem:
-      name: gremlin.problem.DatasetProblem
-      params:
-        maximize: True
-        model:
-          name: MNIST_example.LeNet
-          params:
-            checkpoint_path: ./data/model.pt
-        metric:
-          name: torch.nn.functional.cross_entropy
-        generator:
-          name: MNIST_example.MNISTRowColOcclusionGenerator
-          params:
-            batch_size: 500
-    representation:
-      name: leap_ec.representation.Representation
-      params:
-        initialize:
-          name: leap_ec.int_rep.initializers.create_int_vector
-          params:
-            bounds: ${bounds}
-        decoder:
-          name: MNIST_example.RowColDecoder
-          params: {}
-    pipeline:
-      - name: leap_ec.ops.tournament_selection
-        params:
-          k: 5
-      - name: leap_ec.ops.clone
-        params: {}
-      - name: leap_ec.ops.uniform_crossover
-        params: {}
-      - name: leap_ec.int_rep.ops.mutate_binomial
-        params:
-          std: 2.5
-          bounds: ${bounds}
-          expected_num_mutations: 3
-      - name: leap_ec.ops.evaluate
-        params: {}
-      - name: leap_ec.ops.pool
-        params:
-          size: ${pop_size}
-
-analysis:
-  name: MNIST_example.MNIST_heatmap
+#     $ gremlin.py config.yml
+pop_size: 10
+max_generations: 2
+problem: problem.MNISTProblem
+representation: representation.MNISTRepresentation
