@@ -211,7 +211,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--debug',
                         default=False, action='store_true',
                         help=('set debug flag to monitor values during a run'))
-    parser.add_argument('config', type=str, nargs='+',
+    parser.add_argument('config_files', type=str, nargs='+',
                         help=('path to configuration file(s) which Gremlin '
                               'uses to set up the problem and algorithm'))
     args = parser.parse_args()
@@ -222,14 +222,9 @@ if __name__ == '__main__':
         logger.debug('Logging set to DEBUG.')
 
     # combine configuration files into one dictionary
-    configurations = []
-    for config_path in args.config:
-        logger.debug(f'Loading configuration {config_path}')
-        cfg = OmegaConf.load(config_path)
-        configurations.append(cfg)
-    omegaconf_config = OmegaConf.merge(*configurations)
-    config = OmegaConf.to_container(omegaconf_config, resolve=True)
-    logger.debug(f'Fully merged configuration: {config}')
 
-    # run gremlin algorithm
-    run(config)
+    config = read_config_files(args.config_files)
+    logger.debug(f'Configuration: {config}')
+
+    # # run gremlin algorithm
+    # run(config)
