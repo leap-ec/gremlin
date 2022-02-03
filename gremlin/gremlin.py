@@ -17,9 +17,7 @@ import importlib
 from tqdm import tqdm
 from omegaconf import OmegaConf
 
-from gremlin import analysis
-
-sys.path.append('.')
+import analysis
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -171,19 +169,16 @@ def run(config):
     logger.debug('Done.')
 
 
-def client():
-    ''' Command-line client for Gremlin '''
-
-    # get paths to configuration files
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description=('Gremlin is a machine learning model evaluator. Find out'
                      ' where your model performs poorly.'))
-    parser.add_argument('config', type=str, nargs='+',
-                        help=('path to configuration file(s) which Gremlin '
-                              'uses to set up the problem and algorithm'))
     parser.add_argument('-d', '--debug',
                         default=False, action='store_true',
                         help=('set debug flag to monitor values during a run'))
+    parser.add_argument('config', type=str, nargs='+',
+                        help=('path to configuration file(s) which Gremlin '
+                              'uses to set up the problem and algorithm'))
     args = parser.parse_args()
 
     # set logger to debug if flag is set
