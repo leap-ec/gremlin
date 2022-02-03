@@ -60,6 +60,11 @@ This can be run simply by (must be in `examples/MNIST` directory):
 $ gremlin MNIST_config.yml
 ```
 
+## Versions
+
+* `v0.2dev` -- Revamped config system and heavily refactored/simplified code.
+* `v0.1dev` -- Initial raw release
+
 ## Sub-directories
 * `gremlin/` -- main `gremlin` code
 * `examples/` -- examples for using gremlin

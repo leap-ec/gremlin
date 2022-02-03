@@ -1,6 +1,6 @@
 # Configuration file for Gremlin
 # Usage:
-#   $ gremlin config.yml
+#   $ gremlin config.yml [optional.yml]
 
 # these variables are defined in multiple places
 pop_size: 50
