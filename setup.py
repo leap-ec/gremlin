@@ -15,7 +15,7 @@ setup(
             'gremlin = gremlin.gremlin:client'
         ],
     },
-    url='https://github.com/piprrr/gremlin',
+    url='https://github.com/markcoletti/gremlin',
     license='MIT License',
     author='Mark Coletti',
     author_email='colettima@ornl.gov',
