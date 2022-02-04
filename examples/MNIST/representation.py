@@ -10,13 +10,14 @@ from leap_ec.decoder import Decoder
 from leap_ec.int_rep.initializers import create_int_vector
 from leap_ec.real_rep.initializers import create_real_vector
 
-
+# We could have used plain ole tuples, but namedtuples add a little more self-
+# documentation to the code since now we can refer to individual genes by name.
 MNISTPhenotype = namedtuple('MNISTPhenotype',
                             ['digit'])
 
 
 class MNISTDecoder(Decoder):
-
+    """ Responsible for decoding from genome to phenome for evals """
     def __init__(self):
         super().__init__()
 
@@ -32,9 +33,8 @@ class MNISTDecoder(Decoder):
 
 class MNISTRepresentation(Representation):
     """ Encapsulates MNIST internals
-
     """
-    # Values derived from original start_lr for water example
+    # This says we have one gene that's an integer in the range [0,9].
     genome_bounds = MNISTPhenotype(digit=(0,9))
 
     def __init__(self):
