@@ -19,9 +19,9 @@ class MNISTProblem(ScalarProblem):
         '''
 
         '''
-        # We are maximizing for accuracy; alternatively we could have
+        # We are _minimizing_ for accuracy; alternatively we could have
         # minimized for loss.
-        super().__init__(maximize=True)
+        super().__init__(maximize=False)
         # self.model = model
         # self.metric = metric
         # self.generator = generator
