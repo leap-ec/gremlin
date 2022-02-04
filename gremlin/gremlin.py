@@ -34,12 +34,17 @@ logger = logging.getLogger(__name__)
 from rich.table import Table
 from rich import print
 from rich import pretty
+
 pretty.install()
 
 from rich.traceback import install
+
 install()
 
 import analysis
+
+from leap_ec.algorithm import generational_ea
+from leap_ec.int_rep.ops import mutate_randint
 
 
 def read_config_files(config_files):
@@ -76,7 +81,8 @@ def parse_config(config):
     # problem.MNIST_Problem, in the config and we just want to import
     # problem. So we snip out "problem" from that string and import that.
     problem_module = importlib.import_module(config.problem.split('.')[0])
-    representation_module = importlib.import_module(config.representation.split('.')[0])
+    representation_module = importlib.import_module(
+        config.representation.split('.')[0])
 
     # Now snip out the class that was specified in the config file so that we
     # can properly instantiate that.
@@ -87,6 +93,33 @@ def parse_config(config):
     representation = eval(f'representation_module.{representation_class}()')
 
     return pop_size, max_generations, problem, representation
+
+
+def run_ea(pop_size, max_generations, problem, representation):
+    """ evolve solutions that show worse performing feature sets
+
+    TODO Now add pipeline to config file
+
+    :param pop_size: population size
+    :param max_generations: how many generations to run to
+    :param problem: LEAP Problem subclass that encapsulates how to
+        exercise a given model
+    :param representation: how we represent features sets for the model
+    :returns: None
+    """
+    generation = generational_ea(max_generations=max_generations,
+                                 pop_size=pop_size,
+                                 problem=problem,
+                                 representation=representation,
+                                 pipeline=[
+                                     ops.tournament_selection,
+                                     ops.clone,
+                                     mutate_randint(expected_num_mutations=1),
+                                     ops.evaluate,
+                                     ops.pool(size=pop_size)
+                                 ])
+
+    print(*list(generation), sep='\\n')
 
 
 if __name__ == '__main__':
@@ -118,6 +151,6 @@ if __name__ == '__main__':
 
     # Then run leap_ec.generational_ea() with those classes while writing
     # the output to CSV and other, ancillary files.
-    pass # TODO write this
+    run_ea(pop_size, max_generations, problem, representation)
 
     logger.info('Gremlin finished.')
