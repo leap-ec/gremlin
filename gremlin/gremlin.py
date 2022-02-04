@@ -90,12 +90,14 @@ def parse_config(config):
 
 
 if __name__ == '__main__':
+    logger.info('Gremlin started')
+
     parser = argparse.ArgumentParser(
         description=('Gremlin finds features sets where a given machine '
                      'learning model performs poorly.'))
     parser.add_argument('-d', '--debug',
                         default=False, action='store_true',
-                        help=('set debug flag to monitor values during a run'))
+                        help=('enable debugging output'))
     parser.add_argument('config_files', type=str, nargs='+',
                         help=('path to configuration file(s) which Gremlin '
                               'uses to set up the problem and algorithm'))
@@ -118,4 +120,4 @@ if __name__ == '__main__':
     # the output to CSV and other, ancillary files.
     pass # TODO write this
 
-    logger.info('Run finished.')
+    logger.info('Gremlin finished.')
