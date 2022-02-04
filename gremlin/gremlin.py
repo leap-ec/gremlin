@@ -73,7 +73,8 @@ def parse_config(config):
     subclass, and the Representation subclass from the given `config` object.
 
     :param config: OmegaConf configurations read from YAML files
-    :returns: pop_size, max_generations, Problem objects, and Representation objects
+    :returns: pop_size, max_generations, Problem objects, Representation
+        objects, LEAP pipeline operators
     """
     pop_size = int(config.pop_size)
     max_generations = int(config.max_generations)
@@ -93,33 +94,31 @@ def parse_config(config):
     problem = eval(f'problem_module.{problem_class}()')
     representation = eval(f'representation_module.{representation_class}()')
 
-    return pop_size, max_generations, problem, representation
+    # Finally snip out the defined pipeline; we need to remove the quotes so
+    # that the operators are treated as partial functions and not as strings.
+    pipeline_str = str(config.pipeline).replace('\'','')
+    pipeline = []
+    exec('pipeline = ' + str(pipeline_str))
+
+    return pop_size, max_generations, problem, representation, pipeline
 
 
-def run_ea(pop_size, max_generations, problem, representation):
+def run_ea(pop_size, max_generations, problem, representation, pipeline):
     """ evolve solutions that show worse performing feature sets
-
-    TODO Now add pipeline to config file
 
     :param pop_size: population size
     :param max_generations: how many generations to run to
     :param problem: LEAP Problem subclass that encapsulates how to
         exercise a given model
     :param representation: how we represent features sets for the model
+    :param pipeline: LEAP operator pipeline to be used in EA
     :returns: None
     """
     generation = generational_ea(max_generations=max_generations,
                                  pop_size=pop_size,
                                  problem=problem,
                                  representation=representation,
-                                 pipeline=[
-                                     ops.tournament_selection,
-                                     ops.clone,
-                                     mutate_randint(expected_num_mutations=1,
-                                                    bounds=((0,9),)),
-                                     ops.evaluate,
-                                     ops.pool(size=pop_size)
-                                 ])
+                                 pipeline=pipeline)
 
     print(*list(generation), sep='\\n')
 
@@ -149,10 +148,10 @@ if __name__ == '__main__':
 
     # Import the Problem and Representation classes specified in the
     # config file(s) as well as the pop size and max generations.
-    pop_size, max_generations, problem, representation = parse_config(config)
+    pop_size, max_generations, problem, representation, pipeline = parse_config(config)
 
     # Then run leap_ec.generational_ea() with those classes while writing
     # the output to CSV and other, ancillary files.
-    run_ea(pop_size, max_generations, problem, representation)
+    run_ea(pop_size, max_generations, problem, representation, pipeline)
 
     logger.info('Gremlin finished.')
