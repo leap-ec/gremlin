@@ -45,6 +45,7 @@ import analysis
 
 from leap_ec.algorithm import generational_ea
 from leap_ec.int_rep.ops import mutate_randint
+from leap_ec import ops
 
 
 def read_config_files(config_files):
