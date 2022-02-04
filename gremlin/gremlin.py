@@ -115,7 +115,8 @@ def run_ea(pop_size, max_generations, problem, representation):
                                  pipeline=[
                                      ops.tournament_selection,
                                      ops.clone,
-                                     mutate_randint(expected_num_mutations=1),
+                                     mutate_randint(expected_num_mutations=1,
+                                                    bounds=((0,9),)),
                                      ops.evaluate,
                                      ops.pool(size=pop_size)
                                  ])
