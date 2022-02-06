@@ -35,19 +35,16 @@ class MNISTProblem(ScalarProblem):
         # performs poorly, not the best.
         super().__init__(maximize=False)
 
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
         self.model = model(checkpoint_path=MNISTProblem.model_chk_file)
         self.dataset = MNIST(MNISTProblem.data_path, transform=ToTensor(),
                         train=False, download=True)
-        # self.loader = torch.utils.data.DataLoader(dataset=self.dataset,
-        #
-        #                                      # batch_size=batch_size,
-        #                                      shuffle=True)
-        # self.images, self.labels = next(iter(self.loader))
 
         # Set up dict of mapping digits to indices where they are in the data
-        count_dict = {i: [] for i in range(10)}
+        self.count_dict = {i: [] for i in range(10)}
         for i, element in enumerate(self.dataset):
-            count_dict[element[1]].append(i)
+            self.count_dict[element[1]].append(i)
 
 
     def evaluate(self, phenome):
@@ -70,5 +67,16 @@ class MNISTProblem(ScalarProblem):
         # data = self.generator(phenome)
         # out = self.model(data)
         # score = self.metric(out, self.generator.labels)
-        # TODO replace with call for running model on data.
+
+        # Set up subset loader for the indices for the digit we want
+        loader = torch.utils.data.Subset(self.dataset, self.count_dict[phenome.digit])
+
+        predictions = []
+        with torch.no_grad():
+            for batch in loader:
+                batch = batch.to(self.device)
+                prediction = self.model(batch)
+                prediction = torch.argmax(prediction)
+                predictions.append(prediction)
+
         return nan
