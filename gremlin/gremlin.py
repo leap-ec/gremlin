@@ -1,13 +1,18 @@
 """
 gremlin.py
 
-Command-line client for gremlin.
+usage: gremlin.py [-h] [-d] config_files [config_files ...]
 
-This will take in various problem-dependent configuration files
-and run a default evolutionary algorithm (EA) or a user-defined EA.
+Gremlin finds features sets where a given machine learning model performs
+poorly.
 
-Custom classes can be specified in the configuration.
-See <insert link to examples directory on code.ornl.gov>
+positional arguments:
+  config_files  path to configuration file(s) which Gremlin uses to set up the
+                problem and algorithm
+
+optional arguments:
+  -h, --help    show this help message and exit
+  -d, --debug   enable debugging output
 """
 import sys
 
