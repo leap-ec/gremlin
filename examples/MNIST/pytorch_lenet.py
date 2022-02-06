@@ -1,16 +1,6 @@
+#!/usr/bin/env python3
 '''
-pytorch_lenet.py
-
-MNIST occlusion problem.
-
-Gremlin will find patterns of row/column occlusion that
-cause the model to perform poorly.
-
-This file defines the model, decoder, generator, and analyzer
-dynamically imported, instantiated, and used by the Gremlin
-interface.
-
-Training the model is separate from Gremlin.
+    pytorch NN for learning MNIST models
 '''
 import copy
 
@@ -35,9 +25,9 @@ class RowColDecoder(Decoder):
         return [row_indices, col_indices]
 
 
-class LeNet(nn.Module):
+class Net(nn.Module):
     def __init__(self, checkpoint_path=None):
-        super(LeNet, self).__init__()
+        super(Net, self).__init__()
         self.conv1 = nn.Conv2d(1, 20, 5, 1)
         self.conv2 = nn.Conv2d(20, 50, 5, 1)
         self.lin1 = nn.Linear(4*4*50, 500)

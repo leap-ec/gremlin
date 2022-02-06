@@ -21,7 +21,7 @@ import torch.optim as optim
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 
-from pytorch_lenet import LeNet
+from pytorch_lenet import Net
 
 
 # max number of rows/columns to occlude
@@ -86,7 +86,7 @@ if __name__ == '__main__':
                                               shuffle=True)
 
     print(f'Training CNN model with {EXCLUDE} rows/cols excluded')
-    model = LeNet().to(device)
+    model = Net().to(device)
     optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
     loss_func = nn.CrossEntropyLoss()
 

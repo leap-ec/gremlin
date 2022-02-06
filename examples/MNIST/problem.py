@@ -11,14 +11,14 @@ from pathlib import Path
 from numpy import nan
 from leap_ec.problem import ScalarProblem
 
-from pytorch_lenet import LeNet as model
+from pytorch_lenet import Net as model
 import torch
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 
 
 class MNISTProblem(ScalarProblem):
-    ''' LEAP Problem subclass that encapsulates a pytorch LeNet style model
+    ''' LEAP Problem subclass that encapsulates a pytorch Net style model
         inference used to evaluate how well it can recognize numbers.
     '''
 
@@ -49,33 +49,19 @@ class MNISTProblem(ScalarProblem):
 
     def evaluate(self, phenome):
         '''
-        Evaluate the phenome in the given model, metric, and
-        generator context.
+        Evaluate the phenome with the given model.
 
-        Parameters
-        ----------
-        phenome : Iterable
-            features to use to generate data or as input
-            to the model if not generating data
-
-        Returns
-        -------
-        float
-            performance of the model on the phenome
-            determined by the metric
+        :param phenome: is named tuple where phenome.digit is the current
+            number to evaluate against the model
+        :returns: score for model performance for this digit
         '''
-        # data = self.generator(phenome)
-        # out = self.model(data)
-        # score = self.metric(out, self.generator.labels)
-
         # Set up subset loader for the indices for the digit we want
         loader = torch.utils.data.Subset(self.dataset, self.count_dict[phenome.digit])
 
         predictions = []
         with torch.no_grad():
             for batch in loader:
-                batch = batch.to(self.device)
-                prediction = self.model(batch)
+                prediction = self.model(batch[0])
                 prediction = torch.argmax(prediction)
                 predictions.append(prediction)
 
