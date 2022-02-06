@@ -38,8 +38,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision.datasets import MNIST
+from torchvision import datasets, transforms
 from torchvision.transforms import ToTensor
 from torch.optim.lr_scheduler import StepLR
+import torch.nn.functional as F
+
 
 from pytorch_net import Net
 
@@ -88,6 +91,7 @@ if __name__ == '__main__':
         data_path.mkdir()
 
     batch_size = 64  # from original pytorch MNIST example
+    test_batch_size = 1000
     train_kwargs = {'batch_size': batch_size}
     test_kwargs = {'batch_size': test_batch_size}
 
@@ -125,7 +129,7 @@ if __name__ == '__main__':
     model = Net().to(device)
 
     optimizer = optim.Adadelta(model.parameters(), lr=1.0)
-    scheduler = StepLR(optimizer, step_size=1, gamme=0.7)
+    scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
 
     for epoch in range(14):  # magic number 14 from original source
         train(model, device, train_loader, optimizer, epoch)
