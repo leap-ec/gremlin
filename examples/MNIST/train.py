@@ -131,7 +131,7 @@ if __name__ == '__main__':
     optimizer = optim.Adadelta(model.parameters(), lr=1.0)
     scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
 
-    for epoch in range(14):  # magic number 14 from original source
+    for epoch in range(5):
         train(model, device, train_loader, optimizer, epoch)
         test(model, device, test_loader)
         scheduler.step()
