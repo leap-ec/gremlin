@@ -1,17 +1,34 @@
 '''
-MNIST_optimize.py
+    Train the MNIST model
 
-Partially damage MNIST dataset in a controlled way
-Train CNN classifier on damaged dataset
-Test CNN classifier on normal dataset and on fully damaged dataset
-Run Gremlin to find soft spots created by the partial damage
-Retrain with emphasis on the soft spots suggested by Gremlin
-Test CNN classifier on normal dataset and on fully damaged dataset
+    TODO ensure loaded data has a built-in bias, such as removing an arbitrary
+    digit.
 
-Did the model improve after retraining?
+    Much of this code is copied from:
+
+    https://github.com/pytorch/examples/blob/master/mnist/main.py
 '''
 import os
 import sys
+import logging
+from pathlib import Path
+
+from rich import print
+from rich import pretty
+pretty.install()
+
+from rich.traceback import install
+install()
+
+from rich.logging import RichHandler
+
+# Create unique logger for this namespace
+rich_handler = RichHandler(rich_tracebacks=True,
+                           markup=True)
+logging.basicConfig(level='INFO', format='%(message)s',
+                    datefmt="[%Y/%m/%d %H:%M:%S]",
+                    handlers=[rich_handler])
+logger = logging.getLogger(__name__)
 
 import numpy as np
 from tqdm import tqdm
@@ -21,101 +38,63 @@ import torch.optim as optim
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 
-from pytorch_lenet import Net
-
-
-# max number of rows/columns to occlude
-# or number of pixels to occlude
-LENGTH = 10
-
-# exclude these rows/cols from being occluded during training
-# this excludes every 4th row/col
-EXCLUDE = set(list(range(11, 16)) + list(range(11+28, 16+28)))
-
-
-def alter_image(img, exclude=[], probabilities=None):
-    '''
-    Randomly occlude a row or column of an image
-    unless in exclude and return a copy
-    '''
-    copy_img = img.clone()
-    changes = 0
-    while changes < LENGTH:
-        # randomly choose row/col
-        if probabilities is None:
-            index = np.random.randint(0, 28+28)
-        else:
-            index = np.random.choice(list(range(0, 28+28)), p=probabilities)
-        # do not change these rows/cols so repeat
-        if index in exclude:
-            continue
-        # row
-        if index < 28:
-            copy_img[:, index, :] = 0.5
-        elif index >= 28:
-            copy_img[:, :, index - 28] = 0.5
-        changes += 1
-    return copy_img
+from pytorch_net import Net
 
 
 if __name__ == '__main__':
 
-    # options are {train, eval} PATH
-    data_dir = './data/'
-    if not os.path.exists(data_dir):
-        os.mkdir(data_dir)
+    data_path = Path('.') / 'data'
+    if not data_path.exists():
+        data_path.mkdir()
 
-    # enable CUDA
+    batch_size = 100
+    train_kwargs = {'batch_size': batch_size}
+    test_kwargs = {'batch_size': test_batch_size}
+
     if torch.cuda.is_available():
-        device = 'cuda'
+        device = torch.device("cuda:0")
+        cuda_kwargs = {'num_workers': 1,
+                       'pin_memory': True,
+                       'shuffle': True}
+        train_kwargs.update(cuda_kwargs)
+        test_kwargs.update(cuda_kwargs)
     else:
-        device = 'cpu'
+        device = torch.device('cpu')
+
+    transform=transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,))
+        ])
 
     # download data
-    train_dataset = MNIST(data_dir, transform=ToTensor(),
+    train_dataset = MNIST(data_path, transform=ToTensor(),
+                          transform=transform,
                           train=True, download=True)
-    test_dataset = MNIST(data_dir, transform=ToTensor(),
+    test_dataset = MNIST(data_path, transform=ToTensor(),
+                         transform=transform,
                          train=False, download=True)
 
     # train a CNN on MNIST
-    batch_size = 100
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
-                                               batch_size=batch_size,
-                                               shuffle=True)
+                                               **train_kwargs)
     test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
-                                              shuffle=True)
+                                              **test_kwargs)
 
-    print(f'Training CNN model with {EXCLUDE} rows/cols excluded')
+    logger.info(f'Started training')
+
     model = Net().to(device)
-    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
-    loss_func = nn.CrossEntropyLoss()
+
+    optimizer = optim.Adadelta(model.parameters(), lr=0.01)
+    scheduler = StepLR(optimizer, step_size=1, gamme=0.7)
+
 
     for epoch in tqdm(range(5)):
-        for i, (x, target) in enumerate(train_loader):
-            altered_images = []
-            labels = []
-            for img, label in zip(x, target):
-                altered_img = alter_image(img, exclude=EXCLUDE)
-                altered_images.append(altered_img)
-                labels.append(label)
-            altered_images = torch.stack(altered_images)
-            labels = torch.stack(labels)
+        pass # TODO add call to train()
 
-            x = torch.cat((x, altered_images))
-            target = torch.cat((target, labels))
-
-            optimizer.zero_grad()
-            x = x.to(device)
-            target = target.to(device)
-            pred = model(x)
-            loss = loss_func(pred, target)
-            loss.backward()
-            optimizer.step()
-
-    print(f'Saving model to {data_dir + "model.pt"}...', end='')
+    print(f'Saving model to {data_path / "model.pt"}...', end='')
     torch.save({'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
-                'loss': loss}, data_dir + 'model.pt')
+                'loss': loss}, data_path / 'model.pt')
     print('model saved.')
     model.eval()
 
