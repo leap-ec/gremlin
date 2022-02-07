@@ -47,8 +47,6 @@ from rich.traceback import install
 
 install()
 
-import analysis
-
 from leap_ec.algorithm import generational_ea
 from leap_ec.probe import AttributesCSVProbe
 from leap_ec.int_rep.ops import mutate_randint
