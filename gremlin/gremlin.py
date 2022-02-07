@@ -50,6 +50,7 @@ install()
 import analysis
 
 from leap_ec.algorithm import generational_ea
+from leap_ec.probe import AttributesCSVProbe
 from leap_ec.int_rep.ops import mutate_randint
 from leap_ec import ops
 
@@ -109,7 +110,7 @@ def parse_config(config):
     return pop_size, max_generations, problem, representation, pipeline
 
 
-def run_ea(pop_size, max_generations, problem, representation, pipeline, k_elites=1):
+def run_ea(pop_size, max_generations, problem, representation, pipeline, pop_file, k_elites=1):
     """ evolve solutions that show worse performing feature sets
 
     :param pop_size: population size
@@ -118,21 +119,27 @@ def run_ea(pop_size, max_generations, problem, representation, pipeline, k_elite
         exercise a given model
     :param representation: how we represent features sets for the model
     :param pipeline: LEAP operator pipeline to be used in EA
+    :param pop_file: where to write the population CSV file
     :param k_elites: keep k elites
     :returns: None
     """
-    generation = generational_ea(max_generations=max_generations,
-                                 pop_size=pop_size,
-                                 problem=problem,
-                                 representation=representation,
-                                 k_elites=3, # TODO make this a config param
-                                 pipeline=pipeline)
+    with open(pop_file, 'w') as pop_csv_file:
+        pipeline.append(AttributesCSVProbe(stream=pop_csv_file,
+                                           do_genome=True,
+                                           do_fitness=True))
 
-    # Print the best-so-far by generation.
-    print('Best so far:')
-    print('Generation, birth ID, digit, and fitness')
-    for g in generation:
-        print(g[0], g[1])
+        generation = generational_ea(max_generations=max_generations,
+                                     pop_size=pop_size,
+                                     problem=problem,
+                                     representation=representation,
+                                     k_elites=3, # TODO make this a config param
+                                     pipeline=pipeline)
+
+        # Print the best-so-far by generation.
+        print('Best so far:')
+        print('Generation, birth ID, digit, and fitness')
+        for g in generation:
+            print(g[0], g[1])
 
 
 if __name__ == '__main__':
@@ -165,6 +172,6 @@ if __name__ == '__main__':
     # Then run leap_ec.generational_ea() with those classes while writing
     # the output to CSV and other, ancillary files.
     # TODO make k_elites a config param
-    run_ea(pop_size, max_generations, problem, representation, pipeline, k_elites=5)
+    run_ea(pop_size, max_generations, problem, representation, pipeline, config.pop_file, k_elites=5)
 
     logger.info('Gremlin finished.')

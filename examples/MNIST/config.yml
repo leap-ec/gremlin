@@ -2,8 +2,9 @@
 #
 # Usage:
 #     $ gremlin.py config.yml
-pop_size: 30
-max_generations: 10
+pop_size: 5
+pop_file: pop.csv # where we will write out each generation in CSV format
+max_generations: 4
 problem: problem.MNISTProblem
 representation: representation.MNISTRepresentation
 pipeline:
