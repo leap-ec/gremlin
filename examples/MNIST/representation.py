@@ -10,6 +10,8 @@ from leap_ec.decoder import Decoder
 from leap_ec.int_rep.initializers import create_int_vector
 from leap_ec.real_rep.initializers import create_real_vector
 
+from individual import MNISTIndividual
+
 # We could have used plain ole tuples, but namedtuples add a little more self-
 # documentation to the code since now we can refer to individual genes by name.
 MNISTPhenotype = namedtuple('MNISTPhenotype',
@@ -41,6 +43,4 @@ class MNISTRepresentation(Representation):
         super().__init__(
             initialize=create_int_vector(MNISTRepresentation.genome_bounds),
             decoder=MNISTDecoder(),
-            individual_cls=RobustIndividual)
-        # We use RobustIndividual because that handles any exceptions thrown
-        # during evaluation.
+            individual_cls=MNISTIndividual)
