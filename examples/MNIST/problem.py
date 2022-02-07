@@ -60,12 +60,12 @@ class MNISTProblem(ScalarProblem):
         :returns: score for model performance for this digit
         '''
         # Set up subset loader for the indices for the digit we want
-        # test_set = torch.utils.data.Subset(self.dataset,
-        #                                    self.count_dict[phenome.digit])
-        test_sampler = torch.utils.data.SubsetRandomSampler(self.count_dict[phenome.digit])
+        test_set = torch.utils.data.Subset(self.dataset,
+                                           self.count_dict[phenome.digit])
+        # test_sampler = torch.utils.data.SubsetRandomSampler(self.count_dict[phenome.digit])
         loader = torch.utils.data.DataLoader(self.dataset,
-                                             batch_size=1000,
-                                             sampler=test_sampler,
+                                             batch_size=1,
+                                             sampler=torch.utils.data.SequentialSampler(test_set),
                                              shuffle=False)
 
         with torch.no_grad():
