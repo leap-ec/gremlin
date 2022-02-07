@@ -37,6 +37,7 @@ logging.basicConfig(level='INFO', format='%(message)s',
 logger = logging.getLogger(__name__)
 
 from rich.table import Table
+from rich.columns import Columns
 from rich import print
 from rich import pretty
 
@@ -108,7 +109,7 @@ def parse_config(config):
     return pop_size, max_generations, problem, representation, pipeline
 
 
-def run_ea(pop_size, max_generations, problem, representation, pipeline):
+def run_ea(pop_size, max_generations, problem, representation, pipeline, k_elites=1):
     """ evolve solutions that show worse performing feature sets
 
     :param pop_size: population size
@@ -117,15 +118,18 @@ def run_ea(pop_size, max_generations, problem, representation, pipeline):
         exercise a given model
     :param representation: how we represent features sets for the model
     :param pipeline: LEAP operator pipeline to be used in EA
+    :param k_elites: keep k elites
     :returns: None
     """
     generation = generational_ea(max_generations=max_generations,
                                  pop_size=pop_size,
                                  problem=problem,
                                  representation=representation,
+                                 k_elites=3, # TODO make this a config param
                                  pipeline=pipeline)
 
-    print(*list(generation), sep='\\n')
+    for g in generation:
+        print(g[0], g[1])
 
 
 if __name__ == '__main__':
@@ -157,6 +161,7 @@ if __name__ == '__main__':
 
     # Then run leap_ec.generational_ea() with those classes while writing
     # the output to CSV and other, ancillary files.
-    run_ea(pop_size, max_generations, problem, representation, pipeline)
+    # TODO make k_elites a config param
+    run_ea(pop_size, max_generations, problem, representation, pipeline, k_elites=5)
 
     logger.info('Gremlin finished.')
