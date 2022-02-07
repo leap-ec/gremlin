@@ -132,7 +132,7 @@ def run_ea(pop_size, max_generations, problem, representation, pipeline, pop_fil
                                      pop_size=pop_size,
                                      problem=problem,
                                      representation=representation,
-                                     k_elites=3, # TODO make this a config param
+                                     k_elites=k_elites,
                                      pipeline=pipeline)
 
         # Print the best-so-far by generation.
@@ -172,6 +172,6 @@ if __name__ == '__main__':
     # Then run leap_ec.generational_ea() with those classes while writing
     # the output to CSV and other, ancillary files.
     # TODO make k_elites a config param
-    run_ea(pop_size, max_generations, problem, representation, pipeline, config.pop_file, k_elites=5)
+    run_ea(pop_size, max_generations, problem, representation, pipeline, config.pop_file, k_elites=1)
 
     logger.info('Gremlin finished.')
