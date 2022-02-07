@@ -2,8 +2,8 @@
 #
 # Usage:
 #     $ gremlin.py config.yml
-pop_size: 10
-max_generations: 2
+pop_size: 30
+max_generations: 10
 problem: problem.MNISTProblem
 representation: representation.MNISTRepresentation
 pipeline:
