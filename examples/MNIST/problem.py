@@ -28,11 +28,11 @@ class MNISTProblem(ScalarProblem):
 
     def __init__(self):
         '''
-
+            We are _minimizing_ for accuracy; alternatively we could have
+            maximized for loss. I.e., gremlin wants to find where the model
+            performs poorly, not the best.
         '''
-        # We are _minimizing_ for accuracy; alternatively we could have
-        # maximized for loss. I.e., gremlin wants to find where the model
-        # performs poorly, not the best.
+
         super().__init__(maximize=False)
 
         self.device = torch.device(
@@ -46,6 +46,7 @@ class MNISTProblem(ScalarProblem):
         self.count_dict = {i: [] for i in range(10)}
         for i, element in enumerate(self.dataset):
             self.count_dict[element[1]].append(i)
+
 
     def evaluate(self, phenome):
         '''
@@ -62,12 +63,10 @@ class MNISTProblem(ScalarProblem):
         # Set up subset loader for the indices for the digit we want
         test_set = torch.utils.data.Subset(self.dataset,
                                            self.count_dict[phenome.digit])
-        # test_sampler = torch.utils.data.SubsetRandomSampler(self.count_dict[phenome.digit])
         loader = torch.utils.data.DataLoader(self.dataset,
                                              batch_size=1,
                                              sampler=torch.utils.data.SequentialSampler(test_set),
                                              shuffle=False)
-
         with torch.no_grad():
             correct = 0
             for data, target in loader:
