@@ -11,7 +11,7 @@ from pathlib import Path
 from numpy import nan
 from leap_ec.problem import ScalarProblem
 
-from pytorch_lenet import Net as model
+from pytorch_net import Net as model
 import torch
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
@@ -35,17 +35,17 @@ class MNISTProblem(ScalarProblem):
         # performs poorly, not the best.
         super().__init__(maximize=False)
 
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(
+            "cuda:0" if torch.cuda.is_available() else "cpu")
 
         self.model = model(checkpoint_path=MNISTProblem.model_chk_file)
         self.dataset = MNIST(MNISTProblem.data_path, transform=ToTensor(),
-                        train=False, download=True)
+                             train=False, download=True)
 
         # Set up dict of mapping digits to indices where they are in the data
         self.count_dict = {i: [] for i in range(10)}
         for i, element in enumerate(self.dataset):
             self.count_dict[element[1]].append(i)
-
 
     def evaluate(self, phenome):
         '''
@@ -60,12 +60,19 @@ class MNISTProblem(ScalarProblem):
         :returns: score for model performance for this digit
         '''
         # Set up subset loader for the indices for the digit we want
-        loader = torch.utils.data.Subset(self.dataset, self.count_dict[phenome.digit])
+        # test_set = torch.utils.data.Subset(self.dataset,
+        #                                    self.count_dict[phenome.digit])
+        test_sampler = torch.utils.data.SubsetRandomSampler(self.count_dict[phenome.digit])
+        loader = torch.utils.data.DataLoader(self.dataset,
+                                             batch_size=1000,
+                                             sampler=test_sampler,
+                                             shuffle=False)
 
         with torch.no_grad():
+            correct = 0
             for data, target in loader:
                 data, target = data.to(self.device), target.to(self.device)
-                output = model(data)
+                output = self.model(data)
                 pred = output.argmax(dim=1,
                                      keepdim=True)  # get the index of the max log-probability
                 correct += pred.eq(target.view_as(pred)).sum().item()
