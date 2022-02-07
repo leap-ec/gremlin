@@ -18,4 +18,4 @@ class MNISTIndividual(DistributedIndividual):
 
     def __str__(self):
         phenome = self.decode()
-        return f'{self.birth_id}, {phenome}, {self.fitness}'
+        return f'{self.birth_id}, {phenome.digit}, {self.fitness}'
