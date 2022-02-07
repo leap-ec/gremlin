@@ -51,6 +51,10 @@ class MNISTProblem(ScalarProblem):
         '''
         Evaluate the phenome with the given model.
 
+        Portions from:
+
+        https://github.com/pytorch/examples/blob/master/mnist/main.py
+
         :param phenome: is named tuple where phenome.digit is the current
             number to evaluate against the model
         :returns: score for model performance for this digit
@@ -58,11 +62,12 @@ class MNISTProblem(ScalarProblem):
         # Set up subset loader for the indices for the digit we want
         loader = torch.utils.data.Subset(self.dataset, self.count_dict[phenome.digit])
 
-        predictions = []
         with torch.no_grad():
-            for batch in loader:
-                prediction = self.model(batch[0])
-                prediction = torch.argmax(prediction)
-                predictions.append(prediction)
+            for data, target in loader:
+                data, target = data.to(self.device), target.to(self.device)
+                output = model(data)
+                pred = output.argmax(dim=1,
+                                     keepdim=True)  # get the index of the max log-probability
+                correct += pred.eq(target.view_as(pred)).sum().item()
 
-        return nan
+        return correct / len(loader.dataset)
