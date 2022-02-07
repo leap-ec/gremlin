@@ -1,5 +1,5 @@
 from setuptools import setup
-# Load the version number from inside the package
+
 exec(open('gremlin/__version__.py').read())
 
 # Use the README as the long_description
@@ -10,6 +10,7 @@ setup(
     name='gremlin',
     version=__version__,
     packages=['gremlin'],
+    scripts=['gremlin/gremlin.py'],
     entry_points={
         'console_scripts': [
             'gremlin = gremlin.gremlin:client'
