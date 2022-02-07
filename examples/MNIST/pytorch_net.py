@@ -27,7 +27,7 @@ class Net(nn.Module):
 
         if checkpoint_path is not None:
             ckpt = torch.load(checkpoint_path)
-            self.load_state_dict(ckpt['model_state_dict'])
+            self.load_state_dict(ckpt)
             self.eval()
 
     def forward(self, x):
