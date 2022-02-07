@@ -77,4 +77,4 @@ class MNISTProblem(ScalarProblem):
                                      keepdim=True)  # get the index of the max log-probability
                 correct += pred.eq(target.view_as(pred)).sum().item()
 
-        return correct / len(loader.dataset)
+        return correct / len(test_set)
