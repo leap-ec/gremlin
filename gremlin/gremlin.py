@@ -128,6 +128,9 @@ def run_ea(pop_size, max_generations, problem, representation, pipeline, k_elite
                                  k_elites=3, # TODO make this a config param
                                  pipeline=pipeline)
 
+    # Print the best-so-far by generation.
+    print('Best so far:')
+    print('Generation, birth ID, digit, and fitness')
     for g in generation:
         print(g[0], g[1])
 
