@@ -3,10 +3,10 @@
 # Usage:
 #     $ gremlin.py config.yml
 pop_size: 5
-pop_file: pop.csv # where we will write out each generation in CSV format
 max_generations: 4
 problem: problem.MNISTProblem
 representation: representation.MNISTRepresentation
+pop_file: pop.csv # where we will write out each generation in CSV format
 imports:
   - probe
 pipeline:
@@ -14,5 +14,5 @@ pipeline:
   - ops.clone
   - mutate_randint(expected_num_mutations=1, bounds=representation.MNISTRepresentation.genome_bounds)
   - ops.evaluate
-  - probe.IndividualProbeCSV('inds.csv')
+  - probe.IndividualProbeCSV('inds.csv') # our own probe to see every single created offspring
   - ops.pool(size=${pop_size})

@@ -104,11 +104,8 @@ def parse_config(config):
     problem_obj = eval(f'problem.{problem_class}()')
     representation_obj = eval(f'representation.{representation_class}()')
 
-    # Finally snip out the defined pipeline; we need to remove the quotes so
-    # that the operators are treated as partial functions and not as strings.
+    # Eval each pipeline function to build the LEAP operator pipeline
     pipeline = [eval(x) for x in config.pipeline]
-
-    pass # debugger breakpoint
 
     return pop_size, max_generations, problem_obj, representation_obj, pipeline
 
@@ -140,7 +137,7 @@ def run_ea(pop_size, max_generations, problem, representation, pipeline, pop_fil
 
         # Print the best-so-far by generation.
         print('Best so far:')
-        print('Generation, birth ID, digit, and fitness')
+        print('Generation, str(individual), fitness')
         for g in generation:
             print(g[0], g[1])
 
