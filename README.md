@@ -25,17 +25,21 @@ contain information that can be exploited to tune training data.
 Example Gremlin configuration YAML:
 
 ```yaml
-pop_size: 30 # Size of population
-max_generations: 10 # How many generations does EA go before stopping
-problem: problem.MNISTProblem # the LEAP Problem subclass we're using
-representation: representation.MNISTRepresentation # LEAP Representation 
-  subclass we're using
-pipeline: # LEAP pipeline operators to drive the EA
+pop_size: 5
+max_generations: 4
+k_elites: 2 # optional parameter for specifying the number (k) elites we keep per generation
+problem: problem.MNISTProblem
+representation: representation.MNISTRepresentation
+pop_file: pop.csv # where we will write out each generation in CSV format
+imports:
+  - probe
+pipeline:
   - ops.tournament_selection
   - ops.clone
-  - mutate_randint(expected_num_mutations=1, bounds=representation.genome_bounds)
+  - mutate_randint(expected_num_mutations=1, bounds=representation.MNISTRepresentation.genome_bounds)
   - ops.evaluate
-  - ops.pool(size=pop_size)
+  - probe.IndividualProbeCSV('inds.csv') # our own probe to see every single created offspring
+  - ops.pool(size=${pop_size})
 ```
 
 Essentially, you will have to define the following
