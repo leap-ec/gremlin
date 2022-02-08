@@ -24,6 +24,11 @@ class IndividualProbeCSV():
 
     def __call__(self, next_individual):
         """ append the individual to the CSV file
+
+            This is a LEAP pipeline operator, so we accept an individual from
+            the preceding pipeline operator, append it to the CSV file, and
+            then pass the individual down the line to the next pipeline
+            operator.
         """
         while True:
             individual = next(next_individual)
