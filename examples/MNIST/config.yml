@@ -12,4 +12,5 @@ pipeline:
   - ops.clone
   - mutate_randint(expected_num_mutations=1, bounds=representation.genome_bounds)
   - ops.evaluate
+  - probe.IndividualProbeCSV('inds.csv')
   - ops.pool(size=pop_size)
