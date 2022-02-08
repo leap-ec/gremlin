@@ -19,7 +19,11 @@ class IndividualProbeCSV():
         super().__init__()
         self.csv_file = Path(csv_file)
         self.csv_writer = csv.DictWriter(open(csv_file, 'w'),
-                                         fieldnames=['birth_id','digit','fitness'])
+                                         fieldnames=['birth_id',
+                                                     'digit',
+                                                     'start_eval_time',
+                                                     'stop_eval_time',
+                                                     'fitness'])
         self.csv_writer.writeheader()
 
     def __call__(self, next_individual):
@@ -36,6 +40,8 @@ class IndividualProbeCSV():
 
             self.csv_writer.writerow({'birth_id' : individual.birth_id,
                                       'digit' : phenome.digit,
+                                      'start_eval_time' : individual.start_eval_time,
+                                      'stop_eval_time' : individual.stop_eval_time,
                                       'fitness' : individual.fitness})
 
             yield individual
