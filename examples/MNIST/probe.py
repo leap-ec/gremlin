@@ -5,16 +5,20 @@ import csv
 from pathlib import Path
 
 from rich import pretty
+
 pretty.install()
 
 from rich.traceback import install
+
 install()
+
 
 class IndividualProbeCSV():
     """
         Will write out each individual as it receives it in a pipeline and then
         pass it down the pipeline.
     """
+
     def __init__(self, csv_file):
         super().__init__()
         self.csv_file = Path(csv_file)
@@ -38,10 +42,10 @@ class IndividualProbeCSV():
             individual = next(next_individual)
             phenome = individual.decode()
 
-            self.csv_writer.writerow({'birth_id' : individual.birth_id,
-                                      'digit' : phenome.digit,
-                                      'start_eval_time' : individual.start_eval_time,
+            self.csv_writer.writerow({'birth_id'       : individual.birth_id,
+                                      'digit'          : phenome.digit,
+                                      'start_eval_time': individual.start_eval_time,
                                       'stop_eval_time' : individual.stop_eval_time,
-                                      'fitness' : individual.fitness})
+                                      'fitness'        : individual.fitness})
 
             yield individual
