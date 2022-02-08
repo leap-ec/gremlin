@@ -88,25 +88,29 @@ def parse_config(config):
     # The problem and representations will be something like
     # problem.MNIST_Problem, in the config and we just want to import
     # problem. So we snip out "problem" from that string and import that.
-    problem_module = importlib.import_module(config.problem.split('.')[0])
-    representation_module = importlib.import_module(
+    globals()['problem'] = importlib.import_module(config.problem.split('.')[0])
+    globals()['representation'] = importlib.import_module(
         config.representation.split('.')[0])
+
+    if 'imports' in config:
+        for extra_module in config.imports:
+            globals()[extra_module] = importlib.import_module(extra_module)
 
     # Now snip out the class that was specified in the config file so that we
     # can properly instantiate that.
     problem_class = config.problem.split('.')[1]
     representation_class = config.representation.split('.')[1]
 
-    problem = eval(f'problem_module.{problem_class}()')
-    representation = eval(f'representation_module.{representation_class}()')
+    problem_obj = eval(f'problem.{problem_class}()')
+    representation_obj = eval(f'representation.{representation_class}()')
 
     # Finally snip out the defined pipeline; we need to remove the quotes so
     # that the operators are treated as partial functions and not as strings.
-    pipeline_str = str(config.pipeline).replace('\'','')
-    pipeline = []
-    exec('pipeline = ' + str(pipeline_str))
+    pipeline = [eval(x) for x in config.pipeline]
 
-    return pop_size, max_generations, problem, representation, pipeline
+    pass # debugger breakpoint
+
+    return pop_size, max_generations, problem_obj, representation_obj, pipeline
 
 
 def run_ea(pop_size, max_generations, problem, representation, pipeline, pop_file, k_elites=1):

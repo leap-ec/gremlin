@@ -7,10 +7,12 @@ pop_file: pop.csv # where we will write out each generation in CSV format
 max_generations: 4
 problem: problem.MNISTProblem
 representation: representation.MNISTRepresentation
+imports:
+  - probe
 pipeline:
   - ops.tournament_selection
   - ops.clone
-  - mutate_randint(expected_num_mutations=1, bounds=representation.genome_bounds)
+  - mutate_randint(expected_num_mutations=1, bounds=representation.MNISTRepresentation.genome_bounds)
   - ops.evaluate
   - probe.IndividualProbeCSV('inds.csv')
-  - ops.pool(size=pop_size)
+  - ops.pool(size=${pop_size})
