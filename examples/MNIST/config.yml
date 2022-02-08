@@ -9,7 +9,7 @@ problem: problem.MNISTProblem
 representation: representation.MNISTRepresentation
 pop_file: pop.csv # where we will write out each generation in CSV format
 imports:
-  - probe
+  - probe # need to import our probe.py so that LEAP sees our probe pipeline operator
 pipeline:
   - ops.tournament_selection
   - ops.clone
