@@ -24,7 +24,6 @@ import argparse
 import logging
 import importlib
 
-from tqdm import tqdm
 from omegaconf import OmegaConf
 
 from rich.logging import RichHandler
@@ -37,21 +36,18 @@ logging.basicConfig(level='INFO', format='%(message)s',
                     handlers=[rich_handler])
 logger = logging.getLogger(__name__)
 
-from rich.table import Table
-from rich.columns import Columns
 from rich import print
 from rich import pretty
-
 pretty.install()
 
 from rich.traceback import install
-
 install()
 
 from leap_ec.algorithm import generational_ea
 from leap_ec.probe import AttributesCSVProbe
-from leap_ec.int_rep.ops import mutate_randint
 from leap_ec import ops
+from leap_ec.int_rep.ops import mutate_randint
+from leap_ec.real_rep.ops import mutate_gaussian
 
 
 def read_config_files(config_files):
@@ -110,7 +106,8 @@ def parse_config(config):
     return pop_size, max_generations, problem_obj, representation_obj, pipeline
 
 
-def run_ea(pop_size, max_generations, problem, representation, pipeline, pop_file, k_elites=1):
+def run_ea(pop_size, max_generations, problem, representation, pipeline,
+           pop_file, k_elites=1):
     """ evolve solutions that show worse performing feature sets
 
     :param pop_size: population size
@@ -167,11 +164,13 @@ if __name__ == '__main__':
 
     # Import the Problem and Representation classes specified in the
     # config file(s) as well as the pop size and max generations.
-    pop_size, max_generations, problem, representation, pipeline = parse_config(config)
+    pop_size, max_generations, problem, representation, pipeline = parse_config(
+        config)
 
     # Then run leap_ec.generational_ea() with those classes while writing
     # the output to CSV and other, ancillary files.
-    # TODO make k_elites a config param
-    run_ea(pop_size, max_generations, problem, representation, pipeline, config.pop_file, k_elites=1)
+    k_elites = int(config.k_elites) if 'k_elites' in config else 1
+    run_ea(pop_size, max_generations, problem, representation, pipeline,
+           config.pop_file, k_elites)
 
     logger.info('Gremlin finished.')
