@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 ''' Define a bespoke LEAP probe for printing individuals to a CSV file.
 '''
+import csv
 from pathlib import Path
-import sys
 
-from rich import print
 from rich import pretty
 pretty.install()
 
@@ -19,12 +18,19 @@ class IndividualProbeCSV():
     def __init__(self, csv_file):
         super().__init__()
         self.csv_file = Path(csv_file)
+        self.csv_writer = csv.DictWriter(open(csv_file, 'w'),
+                                         fieldnames=['birth_id','digit','fitness'])
+        self.csv_writer.writeheader()
 
     def __call__(self, next_individual):
         """ append the individual to the CSV file
         """
         while True:
             individual = next(next_individual)
-            print(f'{individual!s}', file=sys.stderr)
+            phenome = individual.decode()
+
+            self.csv_writer.writerow({'birth_id' : individual.birth_id,
+                                      'digit' : phenome.digit,
+                                      'fitness' : individual.fitness})
 
             yield individual
