@@ -13,6 +13,7 @@ import os
 import sys
 import logging
 from pathlib import Path
+import random
 
 from rich import print
 from rich import pretty
@@ -115,12 +116,25 @@ if __name__ == '__main__':
     train_dataset = MNIST(data_path,
                           transform=transform,
                           train=True, download=True)
+    # Randomly drop about 100% of the training data for '8'
+    indices = []
+    for i, element in enumerate(train_dataset):
+        if element[1] == 8:
+            if random.random() < 0.01:
+                indices.append(i)
+        else:
+            indices.append(i)
+    training_subset = torch.utils.data.SubsetRandomSampler(indices)
+
+    print(f'Dropped {(1-len(training_subset)/len(train_dataset))*100:0.4}% training data')
+
     test_dataset = MNIST(data_path,
                          transform=transform,
                          train=False, download=True)
 
-    # train a CNN on MNIST
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
+                                               sampler=training_subset, #torch.utils.data.SubsetRandomSampler(training_subset),
+                                               shuffle=False, # because we're using RandomSampler
                                                **train_kwargs)
     test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
                                               **test_kwargs)
@@ -138,3 +152,5 @@ if __name__ == '__main__':
         scheduler.step()
 
     torch.save(model.state_dict(), data_path / "model.pt")
+
+    logger.info('Finished training')

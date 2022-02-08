@@ -60,12 +60,11 @@ class MNISTProblem(ScalarProblem):
             number to evaluate against the model
         :returns: score for model performance for this digit
         '''
-        # Set up subset loader for the indices for the digit we want
-        test_set = torch.utils.data.Subset(self.dataset,
-                                           self.count_dict[phenome.digit])
+        # Set up sampler for the indices for the digit we want
+        test_sampler = torch.utils.data.SubsetRandomSampler(self.count_dict[phenome.digit])
         loader = torch.utils.data.DataLoader(self.dataset,
                                              batch_size=1,
-                                             sampler=torch.utils.data.SequentialSampler(test_set),
+                                             sampler=test_sampler,
                                              shuffle=False)
         with torch.no_grad():
             correct = 0
@@ -76,4 +75,4 @@ class MNISTProblem(ScalarProblem):
                                      keepdim=True)  # get the index of the max log-probability
                 correct += pred.eq(target.view_as(pred)).sum().item()
 
-        return correct / len(test_set)
+        return correct / len(test_sampler)
