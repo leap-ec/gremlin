@@ -2,6 +2,7 @@
 ''' Define a bespoke LEAP probe for printing individuals to a CSV file.
 '''
 from pathlib import Path
+import sys
 
 from rich import print
 from rich import pretty
@@ -24,6 +25,6 @@ class IndividualProbeCSV():
         """
         while True:
             individual = next(next_individual)
-            print(f'{individual!s}')
+            print(f'{individual!s}', file=sys.stderr)
 
             yield individual
