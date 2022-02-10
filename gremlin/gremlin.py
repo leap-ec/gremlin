@@ -38,16 +38,21 @@ logger = logging.getLogger(__name__)
 
 from rich import print
 from rich import pretty
+
 pretty.install()
 
 from rich.traceback import install
+
 install()
 
 from leap_ec.algorithm import generational_ea
 from leap_ec.probe import AttributesCSVProbe
-from leap_ec import ops
+from leap_ec.global_vars import context
+from leap_ec import ops, util
 from leap_ec.int_rep.ops import mutate_randint
 from leap_ec.real_rep.ops import mutate_gaussian
+
+from toolz import pipe
 
 
 def read_config_files(config_files):
@@ -121,22 +126,51 @@ def run_ea(pop_size, max_generations, problem, representation, pipeline,
     :returns: None
     """
     with open(pop_file, 'w') as pop_csv_file:
-        pipeline.append(AttributesCSVProbe(stream=pop_csv_file,
-                                           do_genome=True,
-                                           do_fitness=True))
+        # Taken from leap_ec.algorithm.generational_ea and modified pipeline
+        # slightly to allow for printing population *after* elites are included
+        # in survival selection to get accurate snapshot of parents for next
+        # generation.
 
-        generation = generational_ea(max_generations=max_generations,
-                                     pop_size=pop_size,
-                                     problem=problem,
-                                     representation=representation,
-                                     k_elites=k_elites,
-                                     pipeline=pipeline)
+        pop_probe = AttributesCSVProbe(stream=pop_csv_file,
+                                       do_genome=True,
+                                       do_fitness=True)
 
-        # Print the best-so-far by generation.
+        # Initialize a population of pop_size individuals of the same type as
+        # individual_cls
+        parents = representation.create_population(pop_size, problem=problem)
+
+        # Set up a generation counter that records the current generation to
+        # context
+        generation_counter = util.inc_generation(
+            start_generation=0, context=context)
+
+        # Evaluate initial population
+        parents = representation.individual_cls.evaluate_population(parents)
+
         print('Best so far:')
         print('Generation, str(individual), fitness')
-        for g in generation:
-            print(g[0], g[1])
+        bsf = max(parents)
+        print(0, bsf)
+
+        pop_probe(parents)  # print out the parents and increment gen counter
+        generation_counter()
+
+        while (generation_counter.generation() < max_generations):
+            # Execute the operators to create a new offspring population
+            offspring = pipe(parents, *pipeline,
+                             ops.elitist_survival(parents=parents,
+                                                  k=k_elites),
+                             pop_probe
+                             )
+
+            if max(offspring) > bsf:  # Update the best-so-far individual
+                bsf = max(offspring)
+
+            parents = offspring  # Replace parents with offspring
+            generation_counter()  # Increment to the next generation
+
+            # Output the best-so-far individual for each generation
+            print(generation_counter.generation(), bsf)
 
 
 if __name__ == '__main__':
