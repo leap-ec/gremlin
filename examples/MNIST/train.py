@@ -116,7 +116,7 @@ if __name__ == '__main__':
     train_dataset = MNIST(data_path,
                           transform=transform,
                           train=True, download=True)
-    # Randomly drop about 100% of the training data for '8'
+    # Randomly drop about 99% of the training data for '8'
     indices = []
     for i, element in enumerate(train_dataset):
         if element[1] == 8:
