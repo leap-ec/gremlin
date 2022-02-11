@@ -1,4 +1,4 @@
-# Gremlin discovers biases or weaknesses in machine learners
+# Gremlin, an adversarial evolutionary algorithm that discovers biases or weaknesses in machine learners
 
 Gremlin learns where a given machine learner (ML) model performs poorly via an
 adversarial evolutionary algorithm (EA).  The EA will find the worst 
