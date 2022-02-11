@@ -11,11 +11,11 @@ setup(
     version=__version__,
     packages=['gremlin'],
     scripts=['gremlin/gremlin.py'],
-    entry_points={
-        'console_scripts': [
-            'gremlin = gremlin.gremlin:client'
-        ],
-    },
+    # entry_points={
+    #     'console_scripts': [
+    #         'gremlin = gremlin.gremlin:client'
+    #     ],
+    # },
     url='https://github.com/markcoletti/gremlin',
     license='MIT License',
     author='Mark Coletti',
