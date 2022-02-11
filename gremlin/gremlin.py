@@ -131,7 +131,12 @@ def run_ea(pop_size, max_generations, problem, representation, pipeline,
         # in survival selection to get accurate snapshot of parents for next
         # generation.
 
+        # If birth_id is an attribute, print that column, too.
+        attributes = ('birth_id',) if hasattr(representation.individual_cls,
+                                             'birth_id') else []
+
         pop_probe = AttributesCSVProbe(stream=pop_csv_file,
+                                       attributes=attributes,
                                        do_genome=True,
                                        do_fitness=True)
 
