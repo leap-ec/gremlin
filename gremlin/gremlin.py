@@ -97,13 +97,10 @@ def parse_config(config):
         for extra_module in config.imports:
             globals()[extra_module] = importlib.import_module(extra_module)
 
-    # Now snip out the class that was specified in the config file so that we
-    # can properly instantiate that.
-    problem_class = config.problem.split('.')[1]
-    representation_class = config.representation.split('.')[1]
-
-    problem_obj = eval(f'problem.{problem_class}()')
-    representation_obj = eval(f'representation.{representation_class}()')
+    # Now instantiate the problem and representation objects, including any
+    # ctor arguments.
+    problem_obj = eval(config.problem)
+    representation_obj = eval(config.representation)
 
     # Eval each pipeline function to build the LEAP operator pipeline
     pipeline = [eval(x) for x in config.pipeline]
