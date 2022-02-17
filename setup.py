@@ -1,5 +1,5 @@
 from setuptools import setup
-# Load the version number from inside the package
+
 exec(open('gremlin/__version__.py').read())
 
 # Use the README as the long_description
@@ -10,12 +10,13 @@ setup(
     name='gremlin',
     version=__version__,
     packages=['gremlin'],
-    entry_points={
-        'console_scripts': [
-            'gremlin = gremlin.gremlin:client'
-        ],
-    },
-    url='https://github.com/piprrr/gremlin',
+    scripts=['gremlin/gremlin.py'],
+    # entry_points={
+    #     'console_scripts': [
+    #         'gremlin = gremlin.gremlin:client'
+    #     ],
+    # },
+    url='https://github.com/markcoletti/gremlin',
     license='MIT License',
     author='Mark Coletti',
     author_email='colettima@ornl.gov',

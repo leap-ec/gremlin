@@ -1,189 +1,192 @@
+#!/usr/bin/env python3
 """
 gremlin.py
 
-Command-line client for gremlin.
+usage: gremlin.py [-h] [-d] config_files [config_files ...]
 
-This will take in various problem-dependent configuration files
-and run a default evolutionary algorithm (EA) or a user-defined EA.
+Gremlin finds features sets where a given machine learning model performs
+poorly.
 
-Custom classes can be specified in the configuration.
-See <insert link to examples directory on code.ornl.gov>
+positional arguments:
+  config_files  path to configuration file(s) which Gremlin uses to set up the
+                problem and algorithm
+
+optional arguments:
+  -h, --help    show this help message and exit
+  -d, --debug   enable debugging output
 """
 import sys
+
+# So we can pick up local modules defined in the YAML config file.
+sys.path.append('.')
+
 import argparse
 import logging
 import importlib
 
-from tqdm import tqdm
 from omegaconf import OmegaConf
 
-from gremlin import analysis
+from rich.logging import RichHandler
 
-sys.path.append('.')
-
-logging.basicConfig()
+# Create unique logger for this namespace
+rich_handler = RichHandler(rich_tracebacks=True,
+                           markup=True)
+logging.basicConfig(level='INFO', format='%(message)s',
+                    datefmt="[%Y/%m/%d %H:%M:%S]",
+                    handlers=[rich_handler])
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
+from rich import print
+from rich import pretty
+
+pretty.install()
+
+from rich.traceback import install
+
+install()
+
+from leap_ec.algorithm import generational_ea
+from leap_ec.probe import AttributesCSVProbe
+from leap_ec.global_vars import context
+from leap_ec import ops, util
+from leap_ec.int_rep.ops import mutate_randint
+from leap_ec.real_rep.ops import mutate_gaussian
+
+from toolz import pipe
 
 
-def check_config(config):
-    '''
-    Checks if the main configuration contains all of the necessary parts
-    for running the algorithm.
+def read_config_files(config_files):
+    """  Read one or more YAML files containing configuration options.
 
-    At a bare minimum the confiuration must follow this structure:
+    The notion is that you can have a set of YAML files for controlling the
+    configuration, such as having a set of default global settings that are
+    overridden or extended by subsequent configuration files.
 
-    evolution:
-        name: custom_generator_function_or_class
-        params: {}
+    E.g.,
 
-    If the problem and representation are not specified, it should be
-    handled within a custom evolution class or function.
-    Custom classes should be defined in a module that can be imported.
+    gremlin.py general.yaml this_model.yaml
 
-    Parameters
-    ----------
-    config : dict
-        Full configuration to check.
+    :param config_files: command line arguments
+    :return: config object of current config
+    """
+    serial_configs = [OmegaConf.load(x) for x in config_files]
+    config = OmegaConf.merge(*serial_configs)
 
-    Returns
-    -------
-    bool
-        True if config meets the minimum requirements.
-        False otherwise.
-    '''
-    if 'evolution' not in config:
-        raise ValueError(('Top-level does not contain "evolution".'
-                          f'\nFull Config: {config}'))
-    if 'name' not in config['evolution']:
-        raise ValueError(f'No algorithm specified. Full config: {config}')
-    if 'params' not in config['evolution']:
-        raise ValueError(('No parameters specified for the algorithm.'
-                          f'Full config: {config}'))
-
-
-def dynamic_import(name):
-    '''
-    Dynamically import a class or function from a string in
-    the form "my_package.my_module.MyClass".
-
-    Parameters
-    ----------
-    name : str
-        import module name including class or function to import
-
-    Returns
-    -------
-    abc.ABCMeta
-        imported class or function
-    '''
-    module, class_or_func = name.rsplit('.', 1)
-    module = importlib.import_module(module)
-    class_or_func = getattr(module, class_or_func)
-    return class_or_func
-
-
-def load_all(config):
-    '''
-    Import and instantiate each pre-defined class or function using
-    a depth first traversal thorugh the configruation.
-
-    Parameters
-    ----------
-    config : dict
-        Full and valid configuration for the Gremlin algorithm
-
-    Returns
-    -------
-    dict
-        Collapsed configuration into a single function to be called
-    '''
-    for key, val in config.items():
-        # if the value is a dictionary with a "name" key then we
-        # try to import it
-        if isinstance(val, dict) and 'name' in val:
-            class_or_func = dynamic_import(val['name'])
-            # if the value has parameters then we instantiate it
-            if 'params' in val:
-                parameters = load_all(val['params'])
-                config[key] = class_or_func(**parameters)
-            # otherwise we only need the Callable function
-            else:
-                config[key] = class_or_func
-        # special case of a list as a parameter
-        if isinstance(val, list):
-            for i, item in enumerate(val):
-                if isinstance(item, dict) and 'name' in item:
-                    class_or_func = dynamic_import(item['name'])
-                    if 'params' in item:
-                        parameters = load_all(item['params'])
-                        val[i] = class_or_func(**parameters)
-                    else:
-                        val[i] = class_or_func
     return config
 
 
-def run(config):
-    '''
-    Run the full Gremlin algorithm. This dispatches to any setup scripts
-    and dynamically loads all modules and classes. It runs the evolutionary
-    algorithm and outputs the final population.
+def parse_config(config):
+    """ Extract the population size, maximum generations to run, the Problem
+    subclass, and the Representation subclass from the given `config` object.
 
-    Parameters
-    ----------
-    config : dict
-        Fully combined yaml with a top-level key 'evolution'
+    :param config: OmegaConf configurations read from YAML files
+    :returns: pop_size, max_generations, Problem objects, Representation
+        objects, LEAP pipeline operators
+    """
+    pop_size = int(config.pop_size)
+    max_generations = int(config.max_generations)
 
-    Returns
-    -------
-    population : list
-        final population of the evolutionary algorithm
-    '''
-    # check for all of the necessary definitions
-    logger.debug('Checking for configuration validity...')
-    check_config(config)
-    logger.debug('Check complete.')
+    # The problem and representations will be something like
+    # problem.MNIST_Problem, in the config and we just want to import
+    # problem. So we snip out "problem" from that string and import that.
+    globals()['problem'] = importlib.import_module(config.problem.split('.')[0])
+    globals()['representation'] = importlib.import_module(
+        config.representation.split('.')[0])
 
-    # dynamically import classes and functions and replace each string
-    # with the class (instantiated) or function
-    logger.debug(('Attempting to load all classes and functions from the'
-                  ' configuration...'))
-    config = load_all(config)
-    logger.debug('Loading complete.')
+    if 'imports' in config:
+        for extra_module in config.imports:
+            globals()[extra_module] = importlib.import_module(extra_module)
 
-    # run the evolutionary algorithm
-    logger.debug('Starting the evolutionary algorithm...')
-    algorithm = config['evolution']
-    best_of_generations = []
-    logger.debug('generation, best-individual')
-    for i, best in tqdm(algorithm):
-        best_of_generations.append(best)
-        logger.debug(f'{i}, {best}')
-    logger.debug('Evolution complete.')
+    # Now instantiate the problem and representation objects, including any
+    # ctor arguments.
+    problem_obj = eval(config.problem)
+    representation_obj = eval(config.representation)
 
-    # run the analysis
-    logger.debug('Analyzing results...')
-    if 'analysis' in config:
-        analyzer = config['analysis']
-        analyzer(best_of_generations)
-    else:
-        analysis.bsf_summary(best_of_generations)
-    logger.debug('Done.')
+    # Eval each pipeline function to build the LEAP operator pipeline
+    pipeline = [eval(x) for x in config.pipeline]
+
+    return pop_size, max_generations, problem_obj, representation_obj, pipeline
 
 
-def client():
-    ''' Command-line client for Gremlin '''
+def run_ea(pop_size, max_generations, problem, representation, pipeline,
+           pop_file, k_elites=1):
+    """ evolve solutions that show worse performing feature sets
 
-    # get paths to configuration files
+    :param pop_size: population size
+    :param max_generations: how many generations to run to
+    :param problem: LEAP Problem subclass that encapsulates how to
+        exercise a given model
+    :param representation: how we represent features sets for the model
+    :param pipeline: LEAP operator pipeline to be used in EA
+    :param pop_file: where to write the population CSV file
+    :param k_elites: keep k elites
+    :returns: None
+    """
+    with open(pop_file, 'w') as pop_csv_file:
+        # Taken from leap_ec.algorithm.generational_ea and modified pipeline
+        # slightly to allow for printing population *after* elites are included
+        # in survival selection to get accurate snapshot of parents for next
+        # generation.
+
+        # If birth_id is an attribute, print that column, too.
+        attributes = ('birth_id',) if hasattr(representation.individual_cls,
+                                             'birth_id') else []
+
+        pop_probe = AttributesCSVProbe(stream=pop_csv_file,
+                                       attributes=attributes,
+                                       do_genome=True,
+                                       do_fitness=True)
+
+        # Initialize a population of pop_size individuals of the same type as
+        # individual_cls
+        parents = representation.create_population(pop_size, problem=problem)
+
+        # Set up a generation counter that records the current generation to
+        # context
+        generation_counter = util.inc_generation(
+            start_generation=0, context=context)
+
+        # Evaluate initial population
+        parents = representation.individual_cls.evaluate_population(parents)
+
+        print('Best so far:')
+        print('Generation, str(individual), fitness')
+        bsf = max(parents)
+        print(0, bsf)
+
+        pop_probe(parents)  # print out the parents and increment gen counter
+        generation_counter()
+
+        while (generation_counter.generation() < max_generations):
+            # Execute the operators to create a new offspring population
+            offspring = pipe(parents, *pipeline,
+                             ops.elitist_survival(parents=parents,
+                                                  k=k_elites),
+                             pop_probe
+                             )
+
+            if max(offspring) > bsf:  # Update the best-so-far individual
+                bsf = max(offspring)
+
+            parents = offspring  # Replace parents with offspring
+            generation_counter()  # Increment to the next generation
+
+            # Output the best-so-far individual for each generation
+            print(generation_counter.generation(), bsf)
+
+
+if __name__ == '__main__':
+    logger.info('Gremlin started')
+
     parser = argparse.ArgumentParser(
-        description=('Gremlin is a machine learning model evaluator. Find out'
-                     ' where your model performs poorly.'))
-    parser.add_argument('config', type=str, nargs='+',
-                        help=('path to configuration file(s) which Gremlin '
-                              'uses to set up the problem and algorithm'))
+        description=('Gremlin finds features sets where a given machine '
+                     'learning model performs poorly.'))
     parser.add_argument('-d', '--debug',
                         default=False, action='store_true',
-                        help=('set debug flag to monitor values during a run'))
+                        help=('enable debugging output'))
+    parser.add_argument('config_files', type=str, nargs='+',
+                        help=('path to configuration file(s) which Gremlin '
+                              'uses to set up the problem and algorithm'))
     args = parser.parse_args()
 
     # set logger to debug if flag is set
@@ -192,14 +195,18 @@ def client():
         logger.debug('Logging set to DEBUG.')
 
     # combine configuration files into one dictionary
-    configurations = []
-    for config_path in args.config:
-        logger.debug(f'Loading configuration {config_path}')
-        cfg = OmegaConf.load(config_path)
-        configurations.append(cfg)
-    omegaconf_config = OmegaConf.merge(*configurations)
-    config = OmegaConf.to_container(omegaconf_config, resolve=True)
-    logger.debug(f'Fully merged configuration: {config}')
+    config = read_config_files(args.config_files)
+    logger.debug(f'Configuration: {config}')
 
-    # run gremlin algorithm
-    run(config)
+    # Import the Problem and Representation classes specified in the
+    # config file(s) as well as the pop size and max generations.
+    pop_size, max_generations, problem, representation, pipeline = parse_config(
+        config)
+
+    # Then run leap_ec.generational_ea() with those classes while writing
+    # the output to CSV and other, ancillary files.
+    k_elites = int(config.k_elites) if 'k_elites' in config else 1
+    run_ea(pop_size, max_generations, problem, representation, pipeline,
+           config.pop_file, k_elites)
+
+    logger.info('Gremlin finished.')

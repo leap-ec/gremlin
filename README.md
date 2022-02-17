@@ -25,28 +25,44 @@ contain information that can be exploited to tune training data.
 Example Gremlin configuration YAML:
 
 ```yaml
-evolution:
-    name: leap_ec.algorithm.generational_ea *or* custom_generator_function
-    params:
-        max_generations: 50
-        pop_size: 25
-        problem:
-            name: leap_ec.problem.Problem *or* custom_class
-            params:
-                maximize: False
-        representation:
-            name: leap_ec.representation.Representation *or* custom_class
-            params:
-                initialize:
-                    name: curried_initializer_function (see leap_ec.int_rep.create_int_vector)
-                    params: {}
-analysis:
-    name: analysis_function
+pop_size: 5
+max_generations: 4
+k_elites: 2 # optional parameter for specifying the number (k) elites we keep per generation
+problem: problem.MNISTProblem
+representation: representation.MNISTRepresentation
+pop_file: pop.csv # where we will write out each generation in CSV format
+imports:
+  - probe
+pipeline:
+  - ops.tournament_selection
+  - ops.clone
+  - mutate_randint(expected_num_mutations=1, bounds=representation.MNISTRepresentation.genome_bounds)
+  - ops.evaluate
+  - probe.IndividualProbeCSV('inds.csv') # our own probe to see every single created offspring
+  - ops.pool(size=${pop_size})
 ```
 
-The `name:` field specifies the function or class to import. If this field is followed
-by `params:` it will attempt to instantiate the function or class with the arguments that
-follow prior to running the evolutionary algorithm.
+Essentially, you will have to define the following
+
+* A LEAP `Representation` subclass, as denoted in the above config file
+  * This, in turn, will mean defining a LEAP `Decoder` and optionally a 
+    bespoke LEAP `Individual` subclass.
+    * The latter is mostly to override a `__str__()` member function for 
+      pretty printing.
+  * We also suggest using a python named tuple to define the genes in the 
+    phenotype as a convenience.  (See `examples/MNIST/representation.py`)
+* A LEAP `Problem` subclass.
+  * This is the meat of defining your problem for Gremlin to tackle.
+  * This subclass may be responsible for loading your models and then 
+    applying them as denoted by genes values per individual.
+  * E.g., the `examples/MNIST/representation.py` dictates that each 
+    individual has a single gene that represents a given digit, and the 
+    corresponding `problem.py` defines an `evaluate()` function that decodes 
+    a given individuals digit as denoted in its gene, and then checks to see 
+    how well the MNIST model predicts for that digit across a test dataset.
+  * Similarly you will need to define a LEAP `Problem` subclass that is 
+    responsible for loading datasets and models and then predicting how 
+    effective they are for a given feature represented by a single individual.
 
 ## Example
 Example code and configuration for a real problem can be found in `examples/MNIST`.
@@ -57,9 +73,14 @@ recognition.
 This can be run simply by (must be in `examples/MNIST` directory):
 
 ```
-$ gremlin MNIST_config.yml
+$ gremlin config.yml
 ```
+
+## Versions
+
+* `v0.2dev` -- Revamped config system and heavily refactored/simplified code.
+* `v0.1dev` -- Initial raw release
 
 ## Sub-directories
 * `gremlin/` -- main `gremlin` code
-* `examples/` -- examples for using gremlin
+* `examples/` -- examples for using gremlin; currently only has MNIST example
