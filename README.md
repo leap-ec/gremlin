@@ -28,8 +28,8 @@ Example Gremlin configuration YAML:
 pop_size: 5
 max_generations: 4
 k_elites: 2 # optional parameter for specifying the number (k) elites we keep per generation
-problem: problem.MNISTProblem
-representation: representation.MNISTRepresentation
+problem: problem.MNISTProblem()
+representation: representation.MNISTRepresentation()
 pop_file: pop.csv # where we will write out each generation in CSV format
 imports:
   - probe
