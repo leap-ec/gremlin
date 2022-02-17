@@ -12,6 +12,11 @@ perform better for those sets.
 * Python 3.[78]
 * [LEAP https://github.com/AureumChaos/LEAP](https://github.com/AureumChaos/LEAP)
 
+## Installation
+
+1. Activate your conda or virtual environment
+2. cd into top-level gremlin directory
+3. `pip install .`
 
 ## Configuration
 Gremlin is essentially a thin convenience wrapper around [LEAP]
@@ -84,3 +89,9 @@ $ gremlin config.yml
 ## Sub-directories
 * `gremlin/` -- main `gremlin` code
 * `examples/` -- examples for using gremlin; currently only has MNIST example
+
+## Main web site
+
+The `gremlin` github repository is [https://github.com/markcoletti/gremlin]
+(https://github.com/markcoletti/gremlin).  `main` is the release branch and 
+active work occurs on the `develop` branch.
