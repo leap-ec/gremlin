@@ -4,5 +4,6 @@
 # gremlin.py config.yml async.yml
 #
 algorithm: async
-max_births: 25
-# scheduler_file: if no dask scheduler file is specified, assume dask workers are per-core on localhost
+async: # parameters for asynchronous steady-state EA
+  max_births: 25
+  # scheduler_file: if no dask scheduler file is specified, assume dask workers are per-core on localhost
