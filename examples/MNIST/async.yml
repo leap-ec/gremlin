@@ -1,0 +1,8 @@
+#
+# Used for running MNIST example with an asynchronous steady-state EA
+#
+# gremlin.py config.yml async.yml
+#
+algorithm: async
+max_births: 25
+# scheduler_file: if no dask scheduler file is specified, assume dask workers are per-core on localhost
