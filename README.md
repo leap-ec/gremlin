@@ -83,10 +83,14 @@ $ gremlin config.yml
 
 ## Versions
 
-* `v0.3` -- 
-* `v0.2dev`, 2/17/22 -- revamped config system and heavily 
-  refactored/simplified code
-* `v0.1dev`, 10/14/21 -- initial raw release
+* `v0.3`
+  * Add support for config variable `algorithm` that denotes if using a 
+    traditional by-generation EA or an asynchronous steady-state EA
+* `v0.2dev`, 2/17/22 
+  * revamped config system and heavily 
+    refactored/simplified code
+* `v0.1dev`, 10/14/21 
+  * initial raw release
 
 ## Sub-directories
 * `gremlin/` -- main `gremlin` code
