@@ -181,7 +181,9 @@ def run_generational_ea(pop_size, max_generations, problem, representation,
 
 def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
                  pipeline,
-                 pop_file, scheduler_file=None):
+                 pop_file,
+                 ind_file,
+                 scheduler_file=None):
     """ evolve solutions that show worse performing feature sets using an
     asynchronous steady state evolutionary algorithm (as opposed to a by-
     generation EA)
@@ -211,6 +213,11 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
     track_pop_stream = open(pop_file, 'w')
     track_pop_func = log_pop(pop_size, track_pop_stream)
 
+    track_ind_func = None
+    if ind_file is not None:
+        track_ind_stream = open(ind_file, 'w')
+        track_ind_func = log_worker_location(track_ind_stream)
+
     with Client(scheduler_file=scheduler_file) as client:
         final_pop = asynchronous.steady_state(client,
                                               births=max_births,
@@ -223,7 +230,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
 
                                               offspring_pipeline=pipeline,
 
-                                              evaluated_probe=None, # todo add
+                                              evaluated_probe=track_ind_func,
                                               pop_probe=track_pop_func)
 
         print('Final pop: \n%s', final_pop)
