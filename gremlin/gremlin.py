@@ -201,6 +201,7 @@ def run_async_ea(pop_size, max_births, problem, representation, pipeline,
         logger.debug('Using all localhost cores for dask')
 
     with Client(scheduler_file=scheduler_file) as client:
+        pass # FIXME finish this
 
 
 
@@ -233,10 +234,10 @@ if __name__ == '__main__':
 
     pop_size = int(config.pop_size)
 
-    if config.algorithm == 'async:
+    if config.algorithm == 'async':
         logger.debug('Using async EA')
 
-        scheduler_file = None if 'scheduler_file' is not in config['async'] else config['async'].scheduler_file
+        scheduler_file = None if 'scheduler_file' not in config['async'] else config['async'].scheduler_file
 
         run_async_ea(pop_size, int(config['async'].max_births), problem, representation, pipeline,
                             config.pop_file, scheduler_file)
