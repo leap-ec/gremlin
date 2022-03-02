@@ -184,6 +184,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
                  pipeline,
                  pop_file,
                  ind_file,
+                 ind_file_probe,
                  scheduler_file=None):
     """ evolve solutions that show worse performing feature sets using an
     asynchronous steady state evolutionary algorithm (as opposed to a by-
@@ -202,6 +203,11 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
         **single offspring**
     :param pop_file: where to write the CSV file of snapshot of population
         given every `pop_size` births
+    :param ind_file: where to write the CSV file of each individual just as
+        it is evaluated
+    :param ind_file_probe: optional function (or functor) for printing out
+        individuals to ind_file; if not specified, then
+        `leap_ec.distrib.probe.log_worker_location` is used by default
     :param scheduler_file: optional dask scheduler file; will use cores on local
         host if none given
     :returns: None
@@ -216,8 +222,11 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
 
     track_ind_func = None
     if ind_file is not None:
-        track_ind_stream = open(ind_file, 'w')
-        track_ind_func = log_worker_location(track_ind_stream)
+        if ind_file_probe is None:
+            track_ind_stream = open(ind_file, 'w')
+            track_ind_func = log_worker_location(track_ind_stream)
+        else:
+            track_ind_func = eval(ind_file_probe + '(open(ind_file,"w"))')
 
     with Client(scheduler_file=scheduler_file) as client:
         final_pop = asynchronous.steady_state(client,
@@ -276,12 +285,16 @@ if __name__ == '__main__':
         ind_file = None if 'ind_file' not in config['async'] else \
             config['async'].ind_file
 
+        ind_file_probe = None if 'ind_file_probe' not in config['async'] else \
+            config['async'].ind_file_probe
+
         run_async_ea(pop_size,
                      int(config['async'].init_pop_size),
                      int(config['async'].max_births),
                      problem, representation, pipeline,
                      config.pop_file,
                      ind_file,
+                     ind_file_probe,
                      scheduler_file)
     elif config.algorithm == 'bygen':
         # default to by generation approach
