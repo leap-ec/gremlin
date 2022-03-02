@@ -235,7 +235,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
                                               pop_probe=track_pop_func)
 
         print('Final pop:')
-        (print(str(x)) for x in final_pop)
+        print([str(x) for x in final_pop])
 
 
 if __name__ == '__main__':
