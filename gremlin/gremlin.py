@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 
 from rich import print
 from rich import pretty
+from rich.pretty import pprint
 
 pretty.install()
 
@@ -233,7 +234,8 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
                                               evaluated_probe=track_ind_func,
                                               pop_probe=track_pop_func)
 
-        print('Final pop: \n%s', final_pop)
+        print('Final pop:')
+        (print(str(x)) for x in final_pop)
 
 
 if __name__ == '__main__':
@@ -271,11 +273,16 @@ if __name__ == '__main__':
         scheduler_file = None if 'scheduler_file' not in config['async'] else \
         config['async'].scheduler_file
 
+        ind_file = None if 'ind_file' not in config['async'] else \
+            config['async'].ind_file
+
         run_async_ea(pop_size,
-                     int(config['async'].max_births),
                      int(config['async'].init_pop_size),
+                     int(config['async'].max_births),
                      problem, representation, pipeline,
-                     config.pop_file, scheduler_file)
+                     config.pop_file,
+                     ind_file,
+                     scheduler_file)
     elif config.algorithm == 'bygen':
         # default to by generation approach
         logger.debug('Using by-generation EA')
