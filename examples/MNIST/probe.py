@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-''' Define a bespoke LEAP probe for printing individuals to a CSV file.
+''' Define bespoke LEAP probes for printing individuals to a CSV file.
+
+    This shows two different approaches to writing out individuals.  The first
+    uses a functor (a class that behaves as a function), and the second is a
+    function that uses closures.
 '''
 import sys
 import csv
