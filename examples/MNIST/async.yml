@@ -5,5 +5,11 @@
 #
 algorithm: async
 async: # parameters for asynchronous steady-state EA
+  init_pop_size: ${pop_size} # default to pop size, but can be set to the number of dask workers
   max_births: 25
   # scheduler_file: if no dask scheduler file is specified, assume dask workers are per-core on localhost
+pipeline:
+  - ops.random_selection # randomly select from pool of prospective parents
+  - ops.clone
+  - mutate_randint(expected_num_mutations=1, bounds=representation.MNISTRepresentation.genome_bounds)
+  - ops.pool(size=1) # for ASEA needs to be one since we're asynchronous assigning a single offspring to a worker to be evaluated

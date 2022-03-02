@@ -109,7 +109,8 @@ def parse_config(config):
     return problem_obj, representation_obj, pipeline
 
 
-def run_generational_ea(pop_size, max_generations, problem, representation, pipeline,
+def run_generational_ea(pop_size, max_generations, problem, representation,
+                        pipeline,
                         pop_file, k_elites=1):
     """ evolve solutions that show worse performing feature sets using a
     by-generation evolutionary algorithm (as opposed to an asynchronous,
@@ -133,7 +134,7 @@ def run_generational_ea(pop_size, max_generations, problem, representation, pipe
 
         # If birth_id is an attribute, print that column, too.
         attributes = ('birth_id',) if hasattr(representation.individual_cls,
-                                             'birth_id') else []
+                                              'birth_id') else []
 
         pop_probe = AttributesCSVProbe(stream=pop_csv_file,
                                        attributes=attributes,
@@ -178,19 +179,26 @@ def run_generational_ea(pop_size, max_generations, problem, representation, pipe
             print(generation_counter.generation(), bsf)
 
 
-def run_async_ea(pop_size, max_births, problem, representation, pipeline,
-                 inds_file, scheduler_file=None):
+def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
+                 pipeline,
+                 pop_file, scheduler_file=None):
     """ evolve solutions that show worse performing feature sets using an
     asynchronous steady state evolutionary algorithm (as opposed to a by-
     generation EA)
 
     :param pop_size: population size
+    :param init_pop_size: the size of the initial random population, which
+        can be different from the constantly updated population size that is
+        dictated by `pop_size`; this is generally set to the number of
+        available workers, but doesn't have to be
     :param max_births: how many births to run to
     :param problem: LEAP Problem subclass that encapsulates how to
         exercise a given model
     :param representation: how we represent features sets for the model
-    :param pipeline: LEAP operator pipeline to be used to create a **single offspring**
-    :param inds_file: where to write the CSV file of individuals for each birth
+    :param pipeline: LEAP operator pipeline to be used to create a
+        **single offspring**
+    :param pop_file: where to write the CSV file of snapshot of population
+        given every `pop_size` births
     :param scheduler_file: optional dask scheduler file; will use cores on local
         host if none given
     :returns: None
@@ -200,9 +208,25 @@ def run_async_ea(pop_size, max_births, problem, representation, pipeline,
     else:
         logger.debug('Using all localhost cores for dask')
 
-    with Client(scheduler_file=scheduler_file) as client:
-        pass # FIXME finish this
+    track_pop_stream = open(pop_file, 'w')
+    track_pop_func = log_pop(pop_size, track_pop_stream)
 
+    with Client(scheduler_file=scheduler_file) as client:
+        final_pop = asynchronous.steady_state(client,
+                                              births=max_births,
+                                              init_pop_size=init_pop_size,
+                                              pop_size=pop_size,
+
+                                              representation=representation,
+
+                                              problem=problem,
+
+                                              offspring_pipeline=pipeline,
+
+                                              evaluated_probe=None, # todo add
+                                              pop_probe=track_pop_func)
+
+        print('Final pop: \n%s', final_pop)
 
 
 if __name__ == '__main__':
@@ -237,10 +261,14 @@ if __name__ == '__main__':
     if config.algorithm == 'async':
         logger.debug('Using async EA')
 
-        scheduler_file = None if 'scheduler_file' not in config['async'] else config['async'].scheduler_file
+        scheduler_file = None if 'scheduler_file' not in config['async'] else \
+        config['async'].scheduler_file
 
-        run_async_ea(pop_size, int(config['async'].max_births), problem, representation, pipeline,
-                            config.pop_file, scheduler_file)
+        run_async_ea(pop_size,
+                     int(config['async'].max_births),
+                     int(config['async'].init_pop_size),
+                     problem, representation, pipeline,
+                     config.pop_file, scheduler_file)
     elif config.algorithm == 'bygen':
         # default to by generation approach
         logger.debug('Using by-generation EA')
@@ -250,7 +278,8 @@ if __name__ == '__main__':
         max_generations = int(config.bygen.max_generations)
         k_elites = int(config.bygen.k_elites) if 'k_elites' in config else 1
 
-        run_generational_ea(pop_size, max_generations, problem, representation, pipeline,
+        run_generational_ea(pop_size, max_generations, problem, representation,
+                            pipeline,
                             config.pop_file, k_elites)
     else:
         logger.critical(f'Algorithm type {config.algorithm} not supported')
