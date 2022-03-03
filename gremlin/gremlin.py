@@ -16,6 +16,7 @@ optional arguments:
   -d, --debug   enable debugging output
 """
 import sys
+import multiprocessing
 
 # So we can pick up local modules defined in the YAML config file.
 sys.path.append('.')
@@ -228,23 +229,47 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
         else:
             track_ind_func = eval(ind_file_probe + '(open(ind_file,"w"))')
 
-    with Client(scheduler_file=scheduler_file) as client:
-        final_pop = asynchronous.steady_state(client,
-                                              births=max_births,
-                                              init_pop_size=init_pop_size,
-                                              pop_size=pop_size,
+    if scheduler_file is None:
+        cluster = LocalCluster(n_workers=multiprocessing.cpu_count(),
+                               processes=True,
+                               silence_logs=logger.level)
+        with Client(cluster) as client:
+            final_pop = asynchronous.steady_state(client,
+                                                  births=max_births,
+                                                  init_pop_size=init_pop_size,
+                                                  pop_size=pop_size,
 
-                                              representation=representation,
+                                                  representation=representation,
 
-                                              problem=problem,
+                                                  problem=problem,
 
-                                              offspring_pipeline=pipeline,
+                                                  offspring_pipeline=pipeline,
 
-                                              evaluated_probe=track_ind_func,
-                                              pop_probe=track_pop_func)
+                                                  evaluated_probe=track_ind_func,
+                                                  pop_probe=track_pop_func)
 
-        print('Final pop:')
-        print([str(x) for x in final_pop])
+            print('Final pop:')
+            print([str(x) for x in final_pop])
+    else:
+        with Client(scheduler_file=scheduler_file,
+                    processes=True,
+                    silence_logs=logger.level) as client:
+            final_pop = asynchronous.steady_state(client,
+                                                  births=max_births,
+                                                  init_pop_size=init_pop_size,
+                                                  pop_size=pop_size,
+
+                                                  representation=representation,
+
+                                                  problem=problem,
+
+                                                  offspring_pipeline=pipeline,
+
+                                                  evaluated_probe=track_ind_func,
+                                                  pop_probe=track_pop_func)
+
+            print('Final pop:')
+            print([str(x) for x in final_pop])
 
 
 if __name__ == '__main__':
