@@ -231,6 +231,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
 
     if scheduler_file is None:
         cluster = LocalCluster(n_workers=multiprocessing.cpu_count(),
+                               threads_per_worker=1,
                                processes=True,
                                silence_logs=logger.level)
         with Client(cluster) as client:
