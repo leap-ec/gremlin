@@ -230,6 +230,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
             track_ind_func = eval(ind_file_probe + '(open(ind_file,"w"))')
 
     if scheduler_file is None:
+        logger.info('Using local cluster')
         cluster = LocalCluster(n_workers=multiprocessing.cpu_count(),
                                threads_per_worker=1,
                                processes=True,
@@ -252,6 +253,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
             print('Final pop:')
             print([str(x) for x in final_pop])
     else:
+        logger.info('Using remote cluster')
         with Client(scheduler_file=scheduler_file,
                     processes=True,
                     silence_logs=logger.level) as client:
