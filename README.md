@@ -30,21 +30,24 @@ contain information that can be exploited to tune training data.
 Example Gremlin configuration YAML:
 
 ```yaml
-pop_size: 5
-max_generations: 4
-k_elites: 2 # optional parameter for specifying the number (k) elites we keep per generation
-problem: problem.MNISTProblem()
-representation: representation.MNISTRepresentation()
+pop_size: 25
+algorithm: async # or bgen
+async: # parameters for asynchronous steady-state EA
+  init_pop_size: ${pop_size}
+  max_births: 2000
+  ind_file: inds.csv # optional file for writing individuals as they are evaluated
+  ind_file_probe: probe.log_ind # optional functor or function for writing ind_file
+
 pop_file: pop.csv # where we will write out each generation in CSV format
+problem: problem.QLearnerBalanceProblem("${env:GREMLIN_QLEARNER_CARTPOLE_MODEL_FPATH}")
+representation: representation.BalanceRepresentation()
 imports:
-  - probe
-pipeline:
-  - ops.tournament_selection
+  - probe # need to import our probe.py so that LEAP sees our probe pipeline operator
+pipeline: # isotropic means we mutate all genes with the given stds
+  - ops.random_selection
   - ops.clone
-  - mutate_randint(expected_num_mutations=1, bounds=representation.MNISTRepresentation.genome_bounds)
-  - ops.evaluate
-  - probe.IndividualProbeCSV('inds.csv') # our own probe to see every single created offspring
-  - ops.pool(size=${pop_size})
+  - mutate_gaussian(expected_num_mutations='isotropic', std=[0.1, 0.001, 0.01, 0.001], hard_bounds=representation.BalanceRepresentation.genome_bounds)
+  - ops.pool(size=1)
 ```
 
 Essentially, you will have to define the following
