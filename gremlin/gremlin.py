@@ -16,6 +16,7 @@ optional arguments:
   -d, --debug   enable debugging output
 """
 import sys
+import multiprocessing
 
 # So we can pick up local modules defined in the YAML config file.
 sys.path.append('.')
@@ -38,6 +39,7 @@ logger = logging.getLogger(__name__)
 
 from rich import print
 from rich import pretty
+from rich.pretty import pprint
 
 pretty.install()
 
@@ -45,12 +47,17 @@ from rich.traceback import install
 
 install()
 
+from distributed import Client, LocalCluster
+
 from leap_ec.algorithm import generational_ea
 from leap_ec.probe import AttributesCSVProbe
 from leap_ec.global_vars import context
 from leap_ec import ops, util
-from leap_ec.int_rep.ops import mutate_randint
+from leap_ec.int_rep.ops import mutate_randint, mutate_binomial
 from leap_ec.real_rep.ops import mutate_gaussian
+from leap_ec.distrib import DistributedIndividual
+from leap_ec.distrib import asynchronous
+from leap_ec.distrib.probe import log_worker_location, log_pop
 
 from toolz import pipe
 
@@ -80,12 +87,8 @@ def parse_config(config):
     subclass, and the Representation subclass from the given `config` object.
 
     :param config: OmegaConf configurations read from YAML files
-    :returns: pop_size, max_generations, Problem objects, Representation
-        objects, LEAP pipeline operators
+    :returns: Problem objects, Representation objects, LEAP pipeline operators
     """
-    pop_size = int(config.pop_size)
-    max_generations = int(config.max_generations)
-
     # The problem and representations will be something like
     # problem.MNIST_Problem, in the config and we just want to import
     # problem. So we snip out "problem" from that string and import that.
@@ -105,12 +108,15 @@ def parse_config(config):
     # Eval each pipeline function to build the LEAP operator pipeline
     pipeline = [eval(x) for x in config.pipeline]
 
-    return pop_size, max_generations, problem_obj, representation_obj, pipeline
+    return problem_obj, representation_obj, pipeline
 
 
-def run_ea(pop_size, max_generations, problem, representation, pipeline,
-           pop_file, k_elites=1):
-    """ evolve solutions that show worse performing feature sets
+def run_generational_ea(pop_size, max_generations, problem, representation,
+                        pipeline,
+                        pop_file, k_elites=1):
+    """ evolve solutions that show worse performing feature sets using a
+    by-generation evolutionary algorithm (as opposed to an asynchronous,
+    steady state evolutionary algorithm)
 
     :param pop_size: population size
     :param max_generations: how many generations to run to
@@ -130,7 +136,7 @@ def run_ea(pop_size, max_generations, problem, representation, pipeline,
 
         # If birth_id is an attribute, print that column, too.
         attributes = ('birth_id',) if hasattr(representation.individual_cls,
-                                             'birth_id') else []
+                                              'birth_id') else []
 
         pop_probe = AttributesCSVProbe(stream=pop_csv_file,
                                        attributes=attributes,
@@ -175,6 +181,100 @@ def run_ea(pop_size, max_generations, problem, representation, pipeline,
             print(generation_counter.generation(), bsf)
 
 
+def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
+                 pipeline,
+                 pop_file,
+                 ind_file,
+                 ind_file_probe,
+                 scheduler_file=None):
+    """ evolve solutions that show worse performing feature sets using an
+    asynchronous steady state evolutionary algorithm (as opposed to a by-
+    generation EA)
+
+    :param pop_size: population size
+    :param init_pop_size: the size of the initial random population, which
+        can be different from the constantly updated population size that is
+        dictated by `pop_size`; this is generally set to the number of
+        available workers, but doesn't have to be
+    :param max_births: how many births to run to
+    :param problem: LEAP Problem subclass that encapsulates how to
+        exercise a given model
+    :param representation: how we represent features sets for the model
+    :param pipeline: LEAP operator pipeline to be used to create a
+        **single offspring**
+    :param pop_file: where to write the CSV file of snapshot of population
+        given every `pop_size` births
+    :param ind_file: where to write the CSV file of each individual just as
+        it is evaluated
+    :param ind_file_probe: optional function (or functor) for printing out
+        individuals to ind_file; if not specified, then
+        `leap_ec.distrib.probe.log_worker_location` is used by default
+    :param scheduler_file: optional dask scheduler file; will use cores on local
+        host if none given
+    :returns: None
+    """
+    if scheduler_file:
+        logger.debug('Using cluster for dask')
+    else:
+        logger.debug('Using all localhost cores for dask')
+
+    track_pop_stream = open(pop_file, 'w')
+    track_pop_func = log_pop(pop_size, track_pop_stream)
+
+    track_ind_func = None
+    if ind_file is not None:
+        if ind_file_probe is None:
+            track_ind_stream = open(ind_file, 'w')
+            track_ind_func = log_worker_location(track_ind_stream)
+        else:
+            track_ind_func = eval(ind_file_probe + '(open(ind_file,"w"))')
+
+    if scheduler_file is None:
+        logger.info('Using local cluster')
+        cluster = LocalCluster(n_workers=multiprocessing.cpu_count(),
+                               threads_per_worker=1,
+                               processes=True,
+                               silence_logs=logger.level)
+        with Client(cluster) as client:
+            final_pop = asynchronous.steady_state(client,
+                                                  births=max_births,
+                                                  init_pop_size=init_pop_size,
+                                                  pop_size=pop_size,
+
+                                                  representation=representation,
+
+                                                  problem=problem,
+
+                                                  offspring_pipeline=pipeline,
+
+                                                  evaluated_probe=track_ind_func,
+                                                  pop_probe=track_pop_func)
+
+            print('Final pop:')
+            print([str(x) for x in final_pop])
+    else:
+        logger.info('Using remote cluster')
+        with Client(scheduler_file=scheduler_file,
+                    processes=True,
+                    silence_logs=logger.level) as client:
+            final_pop = asynchronous.steady_state(client,
+                                                  births=max_births,
+                                                  init_pop_size=init_pop_size,
+                                                  pop_size=pop_size,
+
+                                                  representation=representation,
+
+                                                  problem=problem,
+
+                                                  offspring_pipeline=pipeline,
+
+                                                  evaluated_probe=track_ind_func,
+                                                  pop_probe=track_pop_func)
+
+            print('Final pop:')
+            print([str(x) for x in final_pop])
+
+
 if __name__ == '__main__':
     logger.info('Gremlin started')
 
@@ -199,14 +299,45 @@ if __name__ == '__main__':
     logger.debug(f'Configuration: {config}')
 
     # Import the Problem and Representation classes specified in the
-    # config file(s) as well as the pop size and max generations.
-    pop_size, max_generations, problem, representation, pipeline = parse_config(
-        config)
+    # config file(s) as well as the LEAP pipeline of operators
+    problem, representation, pipeline = parse_config(config)
 
-    # Then run leap_ec.generational_ea() with those classes while writing
-    # the output to CSV and other, ancillary files.
-    k_elites = int(config.k_elites) if 'k_elites' in config else 1
-    run_ea(pop_size, max_generations, problem, representation, pipeline,
-           config.pop_file, k_elites)
+    pop_size = int(config.pop_size)
+
+    if config.algorithm == 'async':
+        logger.debug('Using async EA')
+
+        scheduler_file = None if 'scheduler_file' not in config['async'] else \
+        config['async'].scheduler_file
+
+        ind_file = None if 'ind_file' not in config['async'] else \
+            config['async'].ind_file
+
+        ind_file_probe = None if 'ind_file_probe' not in config['async'] else \
+            config['async'].ind_file_probe
+
+        run_async_ea(pop_size,
+                     int(config['async'].init_pop_size),
+                     int(config['async'].max_births),
+                     problem, representation, pipeline,
+                     config.pop_file,
+                     ind_file,
+                     ind_file_probe,
+                     scheduler_file)
+    elif config.algorithm == 'bygen':
+        # default to by generation approach
+        logger.debug('Using by-generation EA')
+
+        # Then run leap_ec.generational_ea() with those classes while writing
+        # the output to CSV and other, ancillary files.
+        max_generations = int(config.bygen.max_generations)
+        k_elites = int(config.bygen.k_elites) if 'k_elites' in config else 1
+
+        run_generational_ea(pop_size, max_generations, problem, representation,
+                            pipeline,
+                            config.pop_file, k_elites)
+    else:
+        logger.critical(f'Algorithm type {config.algorithm} not supported')
+        sys.exit(1)
 
     logger.info('Gremlin finished.')
