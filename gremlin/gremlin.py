@@ -53,9 +53,11 @@ from leap_ec.algorithm import generational_ea
 from leap_ec.probe import AttributesCSVProbe
 from leap_ec.global_vars import context
 from leap_ec import ops, util
-from leap_ec.int_rep.ops import mutate_randint, mutate_binomial
-from leap_ec.real_rep.ops import mutate_gaussian
+from leap_ec.int_rep.ops import mutate_randint
+from future import genome_mutate_binomial, segmented_mutate
+from leap_ec.real_rep.ops import mutate_gaussian, genome_mutate_gaussian
 from leap_ec.distrib import DistributedIndividual
+from leap_ec.segmented_rep.ops import add_segment, remove_segment
 from leap_ec.distrib import asynchronous
 from leap_ec.distrib.probe import log_worker_location, log_pop
 
@@ -149,8 +151,7 @@ def run_generational_ea(pop_size, max_generations, problem, representation,
 
         # Set up a generation counter that records the current generation to
         # context
-        generation_counter = util.inc_generation(
-            start_generation=0, context=context)
+        generation_counter = util.inc_generation(context=context)
 
         # Evaluate initial population
         parents = representation.individual_cls.evaluate_population(parents)
