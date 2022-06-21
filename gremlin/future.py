@@ -7,7 +7,7 @@
     representations.
 """
 import numpy as np
-from typing import Iterator
+from typing import Iterator, Iterable
 from toolz import curry
 from leap_ec.ops import iteriter_op
 
