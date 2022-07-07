@@ -6,7 +6,7 @@
 algorithm: async
 async: # parameters for asynchronous steady-state EA
   init_pop_size: ${pop_size} # default to pop size, but can be set to the number of dask workers
-  max_births: 25
+  max_births: 100
   ind_file: inds.csv # optional file for writing individuals as they are evaluated
   ind_file_probe: probe.log_ind # optional functor or function for writing ind_file
   # scheduler_file: if no dask scheduler file is specified, assume dask workers are per-core on localhost
