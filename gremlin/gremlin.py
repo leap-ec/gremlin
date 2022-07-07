@@ -59,6 +59,7 @@ from leap_ec.distrib import DistributedIndividual
 from leap_ec.segmented_rep.ops import add_segment, remove_segment, apply_mutation
 from leap_ec.distrib import asynchronous
 from leap_ec.distrib.probe import log_worker_location, log_pop
+from leap_ec.distrib.logger import WorkerLoggerPlugin
 
 from toolz import pipe
 
@@ -236,6 +237,9 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
                                processes=True,
                                silence_logs=logger.level)
         with Client(cluster) as client:
+            # Add a logger that is local to each worker
+            client.register_worker_plugin(WorkerLoggerPlugin())
+
             final_pop = asynchronous.steady_state(client,
                                                   births=max_births,
                                                   init_pop_size=init_pop_size,
@@ -257,6 +261,10 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
         with Client(scheduler_file=scheduler_file,
                     processes=True,
                     silence_logs=logger.level) as client:
+
+            # Add a logger that is local to each worker
+            client.register_worker_plugin(WorkerLoggerPlugin())
+
             final_pop = asynchronous.steady_state(client,
                                                   births=max_births,
                                                   init_pop_size=init_pop_size,
