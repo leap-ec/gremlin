@@ -53,8 +53,7 @@ from leap_ec.algorithm import generational_ea
 from leap_ec.probe import AttributesCSVProbe
 from leap_ec.global_vars import context
 from leap_ec import ops, util
-from leap_ec.int_rep.ops import mutate_randint
-from future import genome_mutate_binomial, segmented_mutate
+from leap_ec.int_rep.ops import mutate_randint, genome_mutate_binomial
 from leap_ec.real_rep.ops import mutate_gaussian, genome_mutate_gaussian
 from leap_ec.distrib import DistributedIndividual
 from leap_ec.segmented_rep.ops import add_segment, remove_segment, apply_mutation
