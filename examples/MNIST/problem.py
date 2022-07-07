@@ -48,7 +48,7 @@ class MNISTProblem(ScalarProblem):
             self.count_dict[element[1]].append(i)
 
 
-    def evaluate(self, phenome):
+    def evaluate(self, individual):
         '''
         Evaluate the phenome with the given model.
 
@@ -56,11 +56,13 @@ class MNISTProblem(ScalarProblem):
 
         https://github.com/pytorch/examples/blob/master/mnist/main.py
 
-        :param phenome: is named tuple where phenome.digit is the current
+        :param individual: individual that contains named tuple where
+            phenome.digit is the current
             number to evaluate against the model
         :returns: score for model performance for this digit
         '''
         # Set up sampler for the indices for the digit we want
+        phenome = individual.decode()
         test_sampler = torch.utils.data.SubsetRandomSampler(self.count_dict[phenome.digit])
         loader = torch.utils.data.DataLoader(self.dataset,
                                              batch_size=1,
