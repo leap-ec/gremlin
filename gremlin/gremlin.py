@@ -91,16 +91,18 @@ def parse_config(config):
     :param config: OmegaConf configurations read from YAML files
     :returns: Problem objects, Representation objects, LEAP pipeline operators
     """
+
+    if 'preamble' in config:
+        # This allows for imports and defining functions referred to later in
+        # the pipeline
+        exec(config.preamble, globals())
+
     # The problem and representations will be something like
     # problem.MNIST_Problem, in the config and we just want to import
     # problem. So we snip out "problem" from that string and import that.
     globals()['problem'] = importlib.import_module(config.problem.split('.')[0])
     globals()['representation'] = importlib.import_module(
         config.representation.split('.')[0])
-
-    if 'imports' in config:
-        for extra_module in config.imports:
-            globals()[extra_module] = importlib.import_module(extra_module)
 
     # Now instantiate the problem and representation objects, including any
     # ctor arguments.
