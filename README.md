@@ -8,6 +8,8 @@ model can be trained again with the updated training set in the hopes that
 the additional examples will be sufficient for the ML to train models that 
 perform better for those sets.
 
+![2022 R&D 100 Award Winner](RD100_2022_Winner_Logo-small.png) Gremlin is a [2022 R&D 100 Award Winner!](https://www.rdworldonline.com/rd-100-winners-for-2022-are-announced/)
+
 ## Requires
 * Python 3.[78]
 * [LEAP https://github.com/AureumChaos/LEAP](https://github.com/AureumChaos/LEAP)
