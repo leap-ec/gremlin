@@ -21,7 +21,9 @@ To apply Gremlin to this training set you will have to:
 
 ## Contents
 
+* `async.yml` -- how to run Gremlin as an asynchronous steady-state EA
 * `config.yml` -- Gremlin configuration file to define how it will run things
+* `config_debug.yml` -- debug configuration to use with config.yml
 * `individual.py` -- This is an optional file where we just define a way to 
   pretty print individuals and to track eval times.
 * `probe.py` -- Another optional file where we define a LEAP pipeline 

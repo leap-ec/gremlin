@@ -48,7 +48,7 @@ class MNISTProblem(ScalarProblem):
             self.count_dict[element[1]].append(i)
 
 
-    def evaluate(self, individual):
+    def evaluate(self, phenome):
         '''
         Evaluate the phenome with the given model.
 
@@ -62,7 +62,6 @@ class MNISTProblem(ScalarProblem):
         :returns: score for model performance for this digit
         '''
         # Set up sampler for the indices for the digit we want
-        phenome = individual.decode()
         test_sampler = torch.utils.data.SubsetRandomSampler(self.count_dict[phenome.digit])
         loader = torch.utils.data.DataLoader(self.dataset,
                                              batch_size=1,
