@@ -29,7 +29,8 @@ run-time characteristics. `gremlin` will parse the YAML file and generate a
 CSV file containing the individuals from the run.  This CSV file should 
 contain information that can be exploited to tune training data.
 
-Example Gremlin configuration YAML:
+<details>
+  <summary>Example Gremlin configuration YAML:</summary>
 
 ```yaml
 pop_size: 25
@@ -51,7 +52,7 @@ pipeline: # isotropic means we mutate all genes with the given stds
   - mutate_gaussian(expected_num_mutations='isotropic', std=[0.1, 0.001, 0.01, 0.001], hard_bounds=representation.BalanceRepresentation.genome_bounds)
   - ops.pool(size=1)
 ```
-
+</details>
 Essentially, you will have to define the following
 
 * A LEAP `Representation` subclass, as denoted in the above config file
@@ -74,7 +75,7 @@ Essentially, you will have to define the following
     responsible for loading datasets and models and then predicting how 
     effective they are for a given feature represented by a single individual.
 
-## Example
+## Examples
 Example code and configuration for a real problem can be found in `examples/MNIST`.
 This problem involves Gremlin evolving patterns of occlusion (graying-out pixels of an
 image) in order to cause a convolutional neural network to perform poorly on digit
