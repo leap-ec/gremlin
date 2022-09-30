@@ -4,6 +4,11 @@
     flexibility for importing dependencies, but also allows for defining
     functions and variables that may be referred to in, say, the pipeline.
 
+    Added optional `with_client` text block for `async` Gremlin whereby one can
+    put in optional code to be executed after Dask client has been connected.
+    This allows for things like `client.wait_for_workers()` and
+    `client.upload_file()` calls to be added to Gremlin runs.
+
 * `v0.3`, 3/9/22
 
   Add support for config variable `algorithm` that denotes if using a
