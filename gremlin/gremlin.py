@@ -247,7 +247,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
                 # This allows for tailored plugins, client.upload_file(), and
                 # similar invocations to be handled.  These will be found in the
                 # optional `with_client` sections in Gremlin YAML config files.
-                exec(with_client_exec_str, globals())
+                exec(with_client_exec_str, globals(), locals())
 
             # Add a logger that is local to each worker
             client.register_worker_plugin(WorkerLoggerPlugin())
@@ -342,7 +342,7 @@ if __name__ == '__main__':
         # things like client.wait_for_workers() or client.upload_file() or the
         # registering of dask plugins.  This is a string that will be `exec()`
         # later after a dask client has been connected.
-        with_client_exec_str = None if 'with_client' no in config['async'] else \
+        with_client_exec_str = None if 'with_client' not in config['async'] else \
             config['async'].with_client
 
         run_async_ea(pop_size,
