@@ -77,9 +77,8 @@ Essentially, you will have to define the following
 
 ## Examples
 Example code and configuration for a real problem can be found in `examples/MNIST`.
-This problem involves Gremlin evolving patterns of occlusion (graying-out pixels of an
-image) in order to cause a convolutional neural network to perform poorly on digit
-recognition.
+This problem involves Gremlin discovering that one of the digits for the MNIST
+training data is poorly represented.
 
 This can be run simply by (must be in `examples/MNIST` directory):
 
