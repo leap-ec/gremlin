@@ -88,6 +88,13 @@ $ gremlin config.yml
 
 ## Versions
 
+* `v0.4`, 9/30/22
+  * Added config variable `async.with_client` that allows for interacting 
+    with Dask before the EA runs; e.g., `client.wait_for_workers()` or 
+    `client.upload_file()`
+  * Replaced `imports` with `preamble` in YAML config files thus giving more
+    flexibility for importing dependencies, but also allows for defining
+    functions and variables that may be referred to in, say, the pipeline.
 * `v0.3`, 3/9/22
   * Add support for config variable `algorithm` that denotes if using a 
     traditional by-generation EA or an asynchronous steady-state EA
