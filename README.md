@@ -44,8 +44,8 @@ async: # parameters for asynchronous steady-state EA
 pop_file: pop.csv # where we will write out each generation in CSV format
 problem: problem.QLearnerBalanceProblem("${env:GREMLIN_QLEARNER_CARTPOLE_MODEL_FPATH}")
 representation: representation.BalanceRepresentation()
-imports:
-  - probe # need to import our probe.py so that LEAP sees our probe pipeline operator
+preamble: |
+  import probe # need to import our probe.py so that LEAP sees our probe pipeline operator
 pipeline: # isotropic means we mutate all genes with the given stds
   - ops.random_selection
   - ops.clone

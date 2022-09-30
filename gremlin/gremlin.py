@@ -53,11 +53,13 @@ from leap_ec.algorithm import generational_ea
 from leap_ec.probe import AttributesCSVProbe
 from leap_ec.global_vars import context
 from leap_ec import ops, util
-from leap_ec.int_rep.ops import mutate_randint, mutate_binomial
-from leap_ec.real_rep.ops import mutate_gaussian
+from leap_ec.int_rep.ops import mutate_randint, genome_mutate_binomial
+from leap_ec.real_rep.ops import mutate_gaussian, genome_mutate_gaussian
 from leap_ec.distrib import DistributedIndividual
+from leap_ec.segmented_rep.ops import add_segment, remove_segment, apply_mutation
 from leap_ec.distrib import asynchronous
 from leap_ec.distrib.probe import log_worker_location, log_pop
+from leap_ec.distrib.logger import WorkerLoggerPlugin
 
 from toolz import pipe
 
@@ -87,18 +89,21 @@ def parse_config(config):
     subclass, and the Representation subclass from the given `config` object.
 
     :param config: OmegaConf configurations read from YAML files
-    :returns: Problem objects, Representation objects, LEAP pipeline operators
+    :returns: Problem objects, Representation objects, LEAP pipeline operators,
+        and optional with_client_exec_str
     """
+
+    if 'preamble' in config:
+        # This allows for imports and defining functions referred to later in
+        # the pipeline
+        exec(config.preamble, globals())
+
     # The problem and representations will be something like
     # problem.MNIST_Problem, in the config and we just want to import
     # problem. So we snip out "problem" from that string and import that.
     globals()['problem'] = importlib.import_module(config.problem.split('.')[0])
     globals()['representation'] = importlib.import_module(
         config.representation.split('.')[0])
-
-    if 'imports' in config:
-        for extra_module in config.imports:
-            globals()[extra_module] = importlib.import_module(extra_module)
 
     # Now instantiate the problem and representation objects, including any
     # ctor arguments.
@@ -149,8 +154,7 @@ def run_generational_ea(pop_size, max_generations, problem, representation,
 
         # Set up a generation counter that records the current generation to
         # context
-        generation_counter = util.inc_generation(
-            start_generation=0, context=context)
+        generation_counter = util.inc_generation(context=context)
 
         # Evaluate initial population
         parents = representation.individual_cls.evaluate_population(parents)
@@ -186,7 +190,8 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
                  pop_file,
                  ind_file,
                  ind_file_probe,
-                 scheduler_file=None):
+                 scheduler_file=None,
+                 with_client_exec_str=None):
     """ evolve solutions that show worse performing feature sets using an
     asynchronous steady state evolutionary algorithm (as opposed to a by-
     generation EA)
@@ -236,6 +241,17 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
                                processes=True,
                                silence_logs=logger.level)
         with Client(cluster) as client:
+
+            if with_client_exec_str is not None:
+                # Execute any user supplied code with the client connected.
+                # This allows for tailored plugins, client.upload_file(), and
+                # similar invocations to be handled.  These will be found in the
+                # optional `with_client` sections in Gremlin YAML config files.
+                exec(with_client_exec_str, globals(), locals())
+
+            # Add a logger that is local to each worker
+            client.register_worker_plugin(WorkerLoggerPlugin())
+
             final_pop = asynchronous.steady_state(client,
                                                   births=max_births,
                                                   init_pop_size=init_pop_size,
@@ -257,6 +273,17 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
         with Client(scheduler_file=scheduler_file,
                     processes=True,
                     silence_logs=logger.level) as client:
+
+            if with_client_exec_str is not None:
+                # Execute any user supplied code with the client connected.
+                # This allows for tailored plugins, client.upload_file(), and
+                # similar invocations to be handled.  These will be found in the
+                # optional `with_client` sections in Gremlin YAML config files.
+                exec(with_client_exec_str, globals(), locals())
+
+            # Add a logger that is local to each worker
+            client.register_worker_plugin(WorkerLoggerPlugin())
+
             final_pop = asynchronous.steady_state(client,
                                                   births=max_births,
                                                   init_pop_size=init_pop_size,
@@ -300,7 +327,8 @@ if __name__ == '__main__':
 
     # Import the Problem and Representation classes specified in the
     # config file(s) as well as the LEAP pipeline of operators
-    problem, representation, pipeline = parse_config(config)
+    problem, representation, pipeline = \
+        parse_config(config)
 
     pop_size = int(config.pop_size)
 
@@ -316,6 +344,14 @@ if __name__ == '__main__':
         ind_file_probe = None if 'ind_file_probe' not in config['async'] else \
             config['async'].ind_file_probe
 
+        # This is for optional code to be executed after the Dask client has
+        # been established, but before execution of the EA.  This allows for
+        # things like client.wait_for_workers() or client.upload_file() or the
+        # registering of dask plugins.  This is a string that will be `exec()`
+        # later after a dask client has been connected.
+        with_client_exec_str = None if 'with_client' not in config['async'] else \
+            config['async'].with_client
+
         run_async_ea(pop_size,
                      int(config['async'].init_pop_size),
                      int(config['async'].max_births),
@@ -323,7 +359,8 @@ if __name__ == '__main__':
                      config.pop_file,
                      ind_file,
                      ind_file_probe,
-                     scheduler_file)
+                     scheduler_file,
+                     with_client_exec_str)
     elif config.algorithm == 'bygen':
         # default to by generation approach
         logger.debug('Using by-generation EA')
@@ -335,7 +372,8 @@ if __name__ == '__main__':
 
         run_generational_ea(pop_size, max_generations, problem, representation,
                             pipeline,
-                            config.pop_file, k_elites)
+                            config.pop_file, k_elites,
+                            with_client_exec_str)
     else:
         logger.critical(f'Algorithm type {config.algorithm} not supported')
         sys.exit(1)

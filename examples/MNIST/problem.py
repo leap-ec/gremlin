@@ -56,7 +56,8 @@ class MNISTProblem(ScalarProblem):
 
         https://github.com/pytorch/examples/blob/master/mnist/main.py
 
-        :param phenome: is named tuple where phenome.digit is the current
+        :param individual: individual that contains named tuple where
+            phenome.digit is the current
             number to evaluate against the model
         :returns: score for model performance for this digit
         '''

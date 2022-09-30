@@ -1,9 +1,29 @@
-Version 0.1dev Migrated to github, 10/14/2021
+* `v0.4`, in progress
 
-This version moved from code.ornl.gov repository to github to facilitate
-use as an open-source project.
+    Replaced `imports` with `preamble` in YAML config files thus giving more
+    flexibility for importing dependencies, but also allows for defining
+    functions and variables that may be referred to in, say, the pipeline.
 
-Version 0.0 Migrated from internal repository, 7/13/2021
+    Added optional `with_client` text block for `async` Gremlin whereby one can
+    put in optional code to be executed after Dask client has been connected.
+    This allows for things like `client.wait_for_workers()` and
+    `client.upload_file()` calls to be added to Gremlin runs.
 
-Migrated from internal git repository to code.ornl.gov, and generalized source to be more
-readily applicable to new problems.
+* `v0.3`, 3/9/22
+
+  Add support for config variable `algorithm` that denotes if using a
+  traditional by-generation EA or an asynchronous steady-state EA
+
+* `v0.2dev`, 2/17/22
+
+  Revamped config system and heavily refactored/simplified code
+
+* Version `0.1dev` Migrated to github, 10/14/2021
+
+  This version moved from code.ornl.gov repository to github to facilitate
+  use as an open-source project.
+
+* Version `0.0` Migrated from internal repository, 7/13/2021
+
+  Migrated from internal git repository to code.ornl.gov, and generalized
+  source to be more readily applicable to new problems.

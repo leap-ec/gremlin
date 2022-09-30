@@ -1,12 +1,18 @@
 # Gremlin config file for MNIST example
 #
+# config_debug.yml just overrides the pop_size, max_generations, and k_elites
+#
+# Essentially this is for running with a very small population just to step
+# through the debugger, and also demonstrates how consecutive YAML config files
+# override command-line predecessors.
+#
 # Usage:
-#     $ gremlin.py config.yml
-pop_size: 7
+#     $ gremlin.py config.yml config_debug.yml
+pop_size: 1
 algorithm: bygen
 bygen: # parameters that only make sense for a by-generation EA
-  max_generations: 5
-  k_elites: 2 # optional parameter for specifying the number (k) elites we keep per generation
+  max_generations: 1
+  k_elites: 0
 problem: problem.MNISTProblem()
 representation: representation.MNISTRepresentation()
 pop_file: pop.csv # where we will write out each generation in CSV format
