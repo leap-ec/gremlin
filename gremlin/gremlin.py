@@ -89,13 +89,23 @@ def parse_config(config):
     subclass, and the Representation subclass from the given `config` object.
 
     :param config: OmegaConf configurations read from YAML files
-    :returns: Problem objects, Representation objects, LEAP pipeline operators
+    :returns: Problem objects, Representation objects, LEAP pipeline operators,
+        and optional with_client_exec_str
     """
 
     if 'preamble' in config:
         # This allows for imports and defining functions referred to later in
         # the pipeline
         exec(config.preamble, globals())
+
+    with_client_exec_str = None
+    if 'with_client' in config:
+        # This is for optional code to be executed after the Dask client has
+        # been established, but before execution of the EA.  This allows for
+        # things like client.wait_for_workers() or client.upload_file() or the
+        # registering of dask plugins.  This is a string that will be `exec()`
+        # later after a dask client has been connected.
+        with_client_exec_str = config.with_client
 
     # The problem and representations will be something like
     # problem.MNIST_Problem, in the config and we just want to import
@@ -112,7 +122,7 @@ def parse_config(config):
     # Eval each pipeline function to build the LEAP operator pipeline
     pipeline = [eval(x) for x in config.pipeline]
 
-    return problem_obj, representation_obj, pipeline
+    return problem_obj, representation_obj, pipeline, with_client_exec_str
 
 
 def run_generational_ea(pop_size, max_generations, problem, representation,
@@ -189,7 +199,8 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
                  pop_file,
                  ind_file,
                  ind_file_probe,
-                 scheduler_file=None):
+                 scheduler_file=None,
+                 with_client_exec_str=None):
     """ evolve solutions that show worse performing feature sets using an
     asynchronous steady state evolutionary algorithm (as opposed to a by-
     generation EA)
@@ -239,6 +250,14 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
                                processes=True,
                                silence_logs=logger.level)
         with Client(cluster) as client:
+
+            if with_client_exec_str is not None:
+                # Execute any user supplied code with the client connected.
+                # This allows for tailored plugins, client.upload_file(), and
+                # similar invocations to be handled.  These will be found in the
+                # optional `with_client` sections in Gremlin YAML config files.
+                exec(with_client_exec_str, globals())
+
             # Add a logger that is local to each worker
             client.register_worker_plugin(WorkerLoggerPlugin())
 
@@ -310,7 +329,8 @@ if __name__ == '__main__':
 
     # Import the Problem and Representation classes specified in the
     # config file(s) as well as the LEAP pipeline of operators
-    problem, representation, pipeline = parse_config(config)
+    problem, representation, pipeline, with_client_exec_str = \
+        parse_config(config)
 
     pop_size = int(config.pop_size)
 
@@ -333,7 +353,8 @@ if __name__ == '__main__':
                      config.pop_file,
                      ind_file,
                      ind_file_probe,
-                     scheduler_file)
+                     scheduler_file,
+                     with_client_exec_str)
     elif config.algorithm == 'bygen':
         # default to by generation approach
         logger.debug('Using by-generation EA')
@@ -345,7 +366,8 @@ if __name__ == '__main__':
 
         run_generational_ea(pop_size, max_generations, problem, representation,
                             pipeline,
-                            config.pop_file, k_elites)
+                            config.pop_file, k_elites,
+                            with_client_exec_str)
     else:
         logger.critical(f'Algorithm type {config.algorithm} not supported')
         sys.exit(1)
