@@ -98,15 +98,6 @@ def parse_config(config):
         # the pipeline
         exec(config.preamble, globals())
 
-    with_client_exec_str = None
-    if 'with_client' in config:
-        # This is for optional code to be executed after the Dask client has
-        # been established, but before execution of the EA.  This allows for
-        # things like client.wait_for_workers() or client.upload_file() or the
-        # registering of dask plugins.  This is a string that will be `exec()`
-        # later after a dask client has been connected.
-        with_client_exec_str = config.with_client
-
     # The problem and representations will be something like
     # problem.MNIST_Problem, in the config and we just want to import
     # problem. So we snip out "problem" from that string and import that.
@@ -122,7 +113,7 @@ def parse_config(config):
     # Eval each pipeline function to build the LEAP operator pipeline
     pipeline = [eval(x) for x in config.pipeline]
 
-    return problem_obj, representation_obj, pipeline, with_client_exec_str
+    return problem_obj, representation_obj, pipeline
 
 
 def run_generational_ea(pop_size, max_generations, problem, representation,
@@ -329,7 +320,7 @@ if __name__ == '__main__':
 
     # Import the Problem and Representation classes specified in the
     # config file(s) as well as the LEAP pipeline of operators
-    problem, representation, pipeline, with_client_exec_str = \
+    problem, representation, pipeline = \
         parse_config(config)
 
     pop_size = int(config.pop_size)
@@ -345,6 +336,14 @@ if __name__ == '__main__':
 
         ind_file_probe = None if 'ind_file_probe' not in config['async'] else \
             config['async'].ind_file_probe
+
+        # This is for optional code to be executed after the Dask client has
+        # been established, but before execution of the EA.  This allows for
+        # things like client.wait_for_workers() or client.upload_file() or the
+        # registering of dask plugins.  This is a string that will be `exec()`
+        # later after a dask client has been connected.
+        with_client_exec_str = None if 'with_client' no in config['async'] else \
+            config['async'].with_client
 
         run_async_ea(pop_size,
                      int(config['async'].init_pop_size),
