@@ -274,6 +274,13 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
                     processes=True,
                     silence_logs=logger.level) as client:
 
+            if with_client_exec_str is not None:
+                # Execute any user supplied code with the client connected.
+                # This allows for tailored plugins, client.upload_file(), and
+                # similar invocations to be handled.  These will be found in the
+                # optional `with_client` sections in Gremlin YAML config files.
+                exec(with_client_exec_str, globals(), locals())
+
             # Add a logger that is local to each worker
             client.register_worker_plugin(WorkerLoggerPlugin())
 
