@@ -351,6 +351,7 @@ if __name__ == '__main__':
         # things like client.wait_for_workers() or client.upload_file() or the
         # registering of dask plugins.  This is a string that will be `exec()`
         # later after a dask client has been connected.
+        # TODO generalize this to be algorithm agnostic in config file
         with_client_exec_str = None if 'with_client' not in config['async'] else \
             config['async'].with_client
 
