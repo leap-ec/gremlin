@@ -110,6 +110,5 @@ $ gremlin config.yml
 
 ## Main web site
 
-The `gremlin` github repository is [https://github.com/markcoletti/gremlin]
-(https://github.com/markcoletti/gremlin).  `main` is the release branch and 
+The `gremlin` github repository is https://github.com/markcoletti/gremlin.  `main` is the release branch and 
 active work occurs on the `develop` branch.
