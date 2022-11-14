@@ -378,13 +378,13 @@ if __name__ == '__main__':
         # things like client.wait_for_workers() or client.upload_file() or the
         # registering of dask plugins.  This is a string that will be `exec()`
         # later after a dask client has been connected.
-        with_client_exec_str = None if 'with_client' not in config['bygen'] else \
-            config['bygen'].with_client
+        # TODO LEAP does not (yet) support Dask for by-generation. Soon!
+        # with_client_exec_str = None if 'with_client' not in config['bygen'] else \
+        #     config['bygen'].with_client
 
         run_generational_ea(pop_size, max_generations, problem, representation,
                             pipeline,
-                            config.pop_file, k_elites,
-                            with_client_exec_str)
+                            config.pop_file, k_elites)
     else:
         logger.critical(f'Algorithm type {config.algorithm} not supported')
         sys.exit(1)
