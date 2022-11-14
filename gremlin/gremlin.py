@@ -332,13 +332,7 @@ if __name__ == '__main__':
 
     pop_size = int(config.pop_size)
 
-    # This is for optional code to be executed after the Dask client has
-    # been established, but before execution of the EA.  This allows for
-    # things like client.wait_for_workers() or client.upload_file() or the
-    # registering of dask plugins.  This is a string that will be `exec()`
-    # later after a dask client has been connected.
-    with_client_exec_str = None if 'with_client' not in config['async'] else \
-        config['async'].with_client
+
 
     if config.algorithm == 'async':
         logger.debug('Using async EA')
@@ -351,6 +345,14 @@ if __name__ == '__main__':
 
         ind_file_probe = None if 'ind_file_probe' not in config['async'] else \
             config['async'].ind_file_probe
+
+        # This is for optional code to be executed after the Dask client has
+        # been established, but before execution of the EA.  This allows for
+        # things like client.wait_for_workers() or client.upload_file() or the
+        # registering of dask plugins.  This is a string that will be `exec()`
+        # later after a dask client has been connected.
+        with_client_exec_str = None if 'with_client' not in config['async'] else \
+            config['async'].with_client
 
         run_async_ea(pop_size,
                      int(config['async'].init_pop_size),
@@ -369,6 +371,14 @@ if __name__ == '__main__':
         # the output to CSV and other, ancillary files.
         max_generations = int(config.bygen.max_generations)
         k_elites = int(config.bygen.k_elites) if 'k_elites' in config else 1
+
+        # This is for optional code to be executed after the Dask client has
+        # been established, but before execution of the EA.  This allows for
+        # things like client.wait_for_workers() or client.upload_file() or the
+        # registering of dask plugins.  This is a string that will be `exec()`
+        # later after a dask client has been connected.
+        with_client_exec_str = None if 'with_client' not in config['bygen'] else \
+            config['bygen'].with_client
 
         run_generational_ea(pop_size, max_generations, problem, representation,
                             pipeline,
