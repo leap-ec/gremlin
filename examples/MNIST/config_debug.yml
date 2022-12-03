@@ -9,19 +9,6 @@
 # Usage:
 #     $ gremlin.py config.yml config_debug.yml
 pop_size: 1
-algorithm: bygen
 bygen: # parameters that only make sense for a by-generation EA
   max_generations: 1
   k_elites: 0
-problem: problem.MNISTProblem()
-representation: representation.MNISTRepresentation()
-pop_file: pop.csv # where we will write out each generation in CSV format
-preamble: |
-  import probe # need to import our probe.py so that LEAP sees our probe pipeline operator
-pipeline:
-  - ops.tournament_selection
-  - ops.clone
-  - mutate_randint(expected_num_mutations=1, bounds=representation.MNISTRepresentation.genome_bounds)
-  - ops.evaluate
-  - probe.IndividualProbeCSV('inds.csv') # our own probe to see every single created offspring
-  - ops.pool(size=${pop_size})
