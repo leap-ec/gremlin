@@ -11,7 +11,7 @@ setup(
     version=__version__,
     packages=['gremlin'],
     scripts=['gremlin/gremlin.py'],
-    python_requires - ">=3.6.0",
+    python_requires=">=3.6.0",
     url='https://github.com/markcoletti/gremlin',
     license='MIT License',
     author='Mark Coletti',
