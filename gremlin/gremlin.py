@@ -253,7 +253,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
             client.register_worker_plugin(WorkerLoggerPlugin())
 
             final_pop = asynchronous.steady_state(client,
-                                                  births=max_births,
+                                                  max_births=max_births,
                                                   init_pop_size=init_pop_size,
                                                   pop_size=pop_size,
 
@@ -285,7 +285,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
             client.register_worker_plugin(WorkerLoggerPlugin())
 
             final_pop = asynchronous.steady_state(client,
-                                                  births=max_births,
+                                                  max_births=max_births,
                                                   init_pop_size=init_pop_size,
                                                   pop_size=pop_size,
 
