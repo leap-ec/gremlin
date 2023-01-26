@@ -16,6 +16,13 @@ setup(
     #         'gremlin = gremlin.gremlin:client'
     #     ],
     # },
+    install_requires=[
+        'leap-ec',
+        'omegaconf',
+        'tqdm',
+        'rich'
+    ],
+    python_requires-">=3.6.0",
     url='https://github.com/markcoletti/gremlin',
     license='MIT License',
     author='Mark Coletti',
