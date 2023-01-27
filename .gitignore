@@ -2,6 +2,7 @@
 /local
 *.log
 *.pyc
+*.pdf
 __pycache__
 docker-nom/build/
 \#*\#
