@@ -11,8 +11,10 @@ perform better for those sets.
 ![2022 R&D 100 Award Winner](RD100_2022_Winner_Logo-small.png) Gremlin is a [2022 R&D 100 Award Winner!](https://www.rdworldonline.com/rd-100-winners-for-2022-are-announced/)
 
 ## Requires
-* Python 3.[78]
-* [LEAP https://github.com/AureumChaos/LEAP](https://github.com/AureumChaos/LEAP)
+* Python >= 3.7.0
+* [LEAP https://github.com/AureumChaos/LEAP/tree/develop](https://github.
+  com/AureumChaos/LEAP/tree/develop) -- **Note that this is for the LEAP
+  `develop` branch.
 
 ## Installation
 
@@ -86,8 +88,21 @@ This can be run simply by (must be in `examples/MNIST` directory):
 $ gremlin config.yml
 ```
 
+## Documentation
+The [wiki](https://github.com/markcoletti/gremlin/wiki) has more detailed 
+documentation, particularly on how the YAML config files can be set up for 
+Gremlin runs.
+
 ## Versions
 
+Note that more detailed explanations for version changes can be found in the 
+`CHANGELOG`.
+
+* `v0.6`, in progress on `develop`
+* `v0.5`, 1/27/23
+  * Main installed executable now `gremlin` and not `gremlin.py`. Added 
+    optional `async.with_client` config section. Improvements made to `setup.
+    py`.
 * `v0.4`, 9/30/22
   * Added config variable `async.with_client` that allows for interacting 
     with Dask before the EA runs; e.g., `client.wait_for_workers()` or 
@@ -110,5 +125,5 @@ $ gremlin config.yml
 
 ## Main web site
 
-The `gremlin` github repository is https://github.com/markcoletti/gremlin.  `main` is the release branch and 
-active work occurs on the `develop` branch.
+The `gremlin` github repository is https://github.com/markcoletti/gremlin.  
+`main` is the release branch and active work occurs on the `develop` branch.
