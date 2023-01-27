@@ -388,7 +388,7 @@ def main():
             logger.critical(f'Algorithm type {config.algorithm} not supported')
             sys.exit(1)
     except Exception as e:
-        print(f'Caught {e!s} during run.  Exiting.')
+        logger.critical(f'Caught {e!s} during run.  Exiting.')
 
     logger.info('Gremlin finished.')
 

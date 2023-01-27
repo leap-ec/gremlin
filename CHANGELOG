@@ -12,6 +12,8 @@
     `setup.py` now installs third party dependencies.  Please note that the
     latest LEAP version in LEAP `develop` will have to be installed.
 
+    Made updates
+
 * `v0.4`, 9/30/22
 
     Replaced `imports` with `preamble` in YAML config files thus giving more
