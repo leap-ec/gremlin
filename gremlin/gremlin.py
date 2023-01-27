@@ -47,6 +47,8 @@ pretty.install()
 rich.traceback.install(show_locals=True)
 
 from rich.console import Console
+console = Console()
+
 
 
 
