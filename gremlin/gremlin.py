@@ -302,7 +302,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
             print([str(x) for x in final_pop])
 
 
-if __name__ == '__main__':
+def main():
     logger.info('Gremlin started')
 
     parser = argparse.ArgumentParser(
@@ -391,3 +391,8 @@ if __name__ == '__main__':
         print(f'Caught {e!s} during run.  Exiting.')
 
     logger.info('Gremlin finished.')
+
+
+
+if __name__ == '__main__':
+    main()
