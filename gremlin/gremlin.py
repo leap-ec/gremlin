@@ -332,61 +332,62 @@ if __name__ == '__main__':
 
     pop_size = int(config.pop_size)
 
+    try:
+        if config.algorithm == 'async':
+            logger.debug('Using async EA')
 
+            scheduler_file = None if 'scheduler_file' not in config['async'] else \
+            config['async'].scheduler_file
 
-    if config.algorithm == 'async':
-        logger.debug('Using async EA')
+            ind_file = None if 'ind_file' not in config['async'] else \
+                config['async'].ind_file
 
-        scheduler_file = None if 'scheduler_file' not in config['async'] else \
-        config['async'].scheduler_file
+            ind_file_probe = None if 'ind_file_probe' not in config['async'] else \
+                config['async'].ind_file_probe
 
-        ind_file = None if 'ind_file' not in config['async'] else \
-            config['async'].ind_file
+            # This is for optional code to be executed after the Dask client has
+            # been established, but before execution of the EA.  This allows for
+            # things like client.wait_for_workers() or client.upload_file() or the
+            # registering of dask plugins.  This is a string that will be `exec()`
+            # later after a dask client has been connected.
+            # TODO generalize this to be algorithm agnostic in config file
+            with_client_exec_str = None if 'with_client' not in config['async'] else \
+                config['async'].with_client
 
-        ind_file_probe = None if 'ind_file_probe' not in config['async'] else \
-            config['async'].ind_file_probe
+            run_async_ea(pop_size,
+                         int(config['async'].init_pop_size),
+                         int(config['async'].max_births),
+                         problem, representation, pipeline,
+                         config.pop_file,
+                         ind_file,
+                         ind_file_probe,
+                         scheduler_file,
+                         with_client_exec_str)
+        elif config.algorithm == 'bygen':
+            # default to by generation approach
+            logger.debug('Using by-generation EA')
 
-        # This is for optional code to be executed after the Dask client has
-        # been established, but before execution of the EA.  This allows for
-        # things like client.wait_for_workers() or client.upload_file() or the
-        # registering of dask plugins.  This is a string that will be `exec()`
-        # later after a dask client has been connected.
-        # TODO generalize this to be algorithm agnostic in config file
-        with_client_exec_str = None if 'with_client' not in config['async'] else \
-            config['async'].with_client
+            # Then run leap_ec.generational_ea() with those classes while writing
+            # the output to CSV and other, ancillary files.
+            max_generations = int(config.bygen.max_generations)
+            k_elites = int(config.bygen.k_elites) if 'k_elites' in config else 1
 
-        run_async_ea(pop_size,
-                     int(config['async'].init_pop_size),
-                     int(config['async'].max_births),
-                     problem, representation, pipeline,
-                     config.pop_file,
-                     ind_file,
-                     ind_file_probe,
-                     scheduler_file,
-                     with_client_exec_str)
-    elif config.algorithm == 'bygen':
-        # default to by generation approach
-        logger.debug('Using by-generation EA')
+            # This is for optional code to be executed after the Dask client has
+            # been established, but before execution of the EA.  This allows for
+            # things like client.wait_for_workers() or client.upload_file() or the
+            # registering of dask plugins.  This is a string that will be `exec()`
+            # later after a dask client has been connected.
+            # TODO LEAP does not (yet) support Dask for by-generation. Soon!
+            # with_client_exec_str = None if 'with_client' not in config['bygen'] else \
+            #     config['bygen'].with_client
 
-        # Then run leap_ec.generational_ea() with those classes while writing
-        # the output to CSV and other, ancillary files.
-        max_generations = int(config.bygen.max_generations)
-        k_elites = int(config.bygen.k_elites) if 'k_elites' in config else 1
-
-        # This is for optional code to be executed after the Dask client has
-        # been established, but before execution of the EA.  This allows for
-        # things like client.wait_for_workers() or client.upload_file() or the
-        # registering of dask plugins.  This is a string that will be `exec()`
-        # later after a dask client has been connected.
-        # TODO LEAP does not (yet) support Dask for by-generation. Soon!
-        # with_client_exec_str = None if 'with_client' not in config['bygen'] else \
-        #     config['bygen'].with_client
-
-        run_generational_ea(pop_size, max_generations, problem, representation,
-                            pipeline,
-                            config.pop_file, k_elites)
-    else:
-        logger.critical(f'Algorithm type {config.algorithm} not supported')
-        sys.exit(1)
+            run_generational_ea(pop_size, max_generations, problem, representation,
+                                pipeline,
+                                config.pop_file, k_elites)
+        else:
+            logger.critical(f'Algorithm type {config.algorithm} not supported')
+            sys.exit(1)
+    except Exception as e:
+        print(f'Caught {e!s} during run.  Exiting.')
 
     logger.info('Gremlin finished.')
