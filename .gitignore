@@ -3,6 +3,9 @@
 *.log
 *.pyc
 *.pdf
+*.pt
+*.gz
+*-ubyte
 __pycache__
 docker-nom/build/
 \#*\#
