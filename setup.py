@@ -11,17 +11,23 @@ setup(
     version=__version__,
     packages=['gremlin'],
     scripts=['gremlin/gremlin.py'],
-    # entry_points={
-    #     'console_scripts': [
-    #         'gremlin = gremlin.gremlin:client'
-    #     ],
-    # },
+    python_requires=">=3.7.0",
     url='https://github.com/markcoletti/gremlin',
     license='MIT License',
     author='Mark Coletti',
     author_email='colettima@ornl.gov',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    description=('Adversarial evolutionary algorithm for'
-                 'training data optimization')
+    description=('Adversarial evolutionary algorithm for training data '
+                 'optimization'),
+    entry_points={
+        "console_scripts": [
+            "gremlin = gremlin:main"
+        ]
+    },
+    install_requires=[
+        'leap-ec',
+        'omegaconf',
+        'tqdm',
+        'rich']
 )

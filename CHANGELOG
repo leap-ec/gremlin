@@ -1,3 +1,22 @@
+* `v0.5`, 1/27/23
+
+    Installed executable now `gremlin` instead of `gremlin.py`.  Compensated
+    for LEAP API changes. (Note that `gremlin` still depends on the LEAP
+    `develop` branch and not on the official LEAP `master` branch releases to
+    take advantage of more up to date LEAP features.)
+
+    Added optional `with_client` `async` config section for code to be executed
+    after Dask client is started.  This can be used to start worker plugins or
+    wait for a certain number of workers to become available.
+
+    `setup.py` now installs third party dependencies.  Please note that the
+    latest LEAP version in LEAP `develop` will have to be installed.
+
+    Now better catch exceptions in LEAP code such that any errors that
+    propagate from there don't silently kill Gremlin.
+
+    Made a number of minor bug fixes and code format changes.
+
 * `v0.4`, 9/30/22
 
     Replaced `imports` with `preamble` in YAML config files thus giving more
@@ -11,19 +30,19 @@
 
 * `v0.3`, 3/9/22
 
-  Add support for config variable `algorithm` that denotes if using a
-  traditional by-generation EA or an asynchronous steady-state EA
+    Add support for config variable `algorithm` that denotes if using a
+    traditional by-generation EA or an asynchronous steady-state EA
 
 * `v0.2dev`, 2/17/22
 
-  Revamped config system and heavily refactored/simplified code
+    Revamped config system and heavily refactored/simplified code
 
 * Version `0.1dev` Migrated to github, 10/14/2021
 
-  This version moved from code.ornl.gov repository to github to facilitate
-  use as an open-source project.
+    This version moved from code.ornl.gov repository to github to facilitate
+    use as an open-source project.
 
 * Version `0.0` Migrated from internal repository, 7/13/2021
 
-  Migrated from internal git repository to code.ornl.gov, and generalized
-  source to be more readily applicable to new problems.
+    Migrated from internal git repository to code.ornl.gov, and generalized
+    source to be more readily applicable to new problems.

@@ -27,6 +27,7 @@ import importlib
 
 from omegaconf import OmegaConf
 
+import rich
 from rich.logging import RichHandler
 
 # Create unique logger for this namespace
@@ -43,9 +44,13 @@ from rich.pretty import pprint
 
 pretty.install()
 
-from rich.traceback import install
+rich.traceback.install(show_locals=True)
 
-install()
+from rich.console import Console
+console = Console()
+
+
+
 
 from distributed import Client, LocalCluster
 
@@ -253,7 +258,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
             client.register_worker_plugin(WorkerLoggerPlugin())
 
             final_pop = asynchronous.steady_state(client,
-                                                  births=max_births,
+                                                  max_births=max_births,
                                                   init_pop_size=init_pop_size,
                                                   pop_size=pop_size,
 
@@ -285,7 +290,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
             client.register_worker_plugin(WorkerLoggerPlugin())
 
             final_pop = asynchronous.steady_state(client,
-                                                  births=max_births,
+                                                  max_births=max_births,
                                                   init_pop_size=init_pop_size,
                                                   pop_size=pop_size,
 
@@ -302,7 +307,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
             print([str(x) for x in final_pop])
 
 
-if __name__ == '__main__':
+def main():
     logger.info('Gremlin started')
 
     parser = argparse.ArgumentParser(
@@ -332,50 +337,68 @@ if __name__ == '__main__':
 
     pop_size = int(config.pop_size)
 
-    if config.algorithm == 'async':
-        logger.debug('Using async EA')
+    try:
+        if config.algorithm == 'async':
+            logger.debug('Using async EA')
 
-        scheduler_file = None if 'scheduler_file' not in config['async'] else \
-        config['async'].scheduler_file
+            scheduler_file = None if 'scheduler_file' not in config['async'] else \
+            config['async'].scheduler_file
 
-        ind_file = None if 'ind_file' not in config['async'] else \
-            config['async'].ind_file
+            ind_file = None if 'ind_file' not in config['async'] else \
+                config['async'].ind_file
 
-        ind_file_probe = None if 'ind_file_probe' not in config['async'] else \
-            config['async'].ind_file_probe
+            ind_file_probe = None if 'ind_file_probe' not in config['async'] else \
+                config['async'].ind_file_probe
 
-        # This is for optional code to be executed after the Dask client has
-        # been established, but before execution of the EA.  This allows for
-        # things like client.wait_for_workers() or client.upload_file() or the
-        # registering of dask plugins.  This is a string that will be `exec()`
-        # later after a dask client has been connected.
-        with_client_exec_str = None if 'with_client' not in config['async'] else \
-            config['async'].with_client
+            # This is for optional code to be executed after the Dask client has
+            # been established, but before execution of the EA.  This allows for
+            # things like client.wait_for_workers() or client.upload_file() or the
+            # registering of dask plugins.  This is a string that will be `exec()`
+            # later after a dask client has been connected.
+            # TODO generalize this to be algorithm agnostic in config file
+            with_client_exec_str = None if 'with_client' not in config['async'] else \
+                config['async'].with_client
 
-        run_async_ea(pop_size,
-                     int(config['async'].init_pop_size),
-                     int(config['async'].max_births),
-                     problem, representation, pipeline,
-                     config.pop_file,
-                     ind_file,
-                     ind_file_probe,
-                     scheduler_file,
-                     with_client_exec_str)
-    elif config.algorithm == 'bygen':
-        # default to by generation approach
-        logger.debug('Using by-generation EA')
+            run_async_ea(pop_size,
+                         int(config['async'].init_pop_size),
+                         int(config['async'].max_births),
+                         problem, representation, pipeline,
+                         config.pop_file,
+                         ind_file,
+                         ind_file_probe,
+                         scheduler_file,
+                         with_client_exec_str)
+        elif config.algorithm == 'bygen':
+            # default to by generation approach
+            logger.debug('Using by-generation EA')
 
-        # Then run leap_ec.generational_ea() with those classes while writing
-        # the output to CSV and other, ancillary files.
-        max_generations = int(config.bygen.max_generations)
-        k_elites = int(config.bygen.k_elites) if 'k_elites' in config else 1
+            # Then run leap_ec.generational_ea() with those classes while writing
+            # the output to CSV and other, ancillary files.
+            max_generations = int(config.bygen.max_generations)
+            k_elites = int(config.bygen.k_elites) if 'k_elites' in config else 1
 
-        run_generational_ea(pop_size, max_generations, problem, representation,
-                            pipeline,
-                            config.pop_file, k_elites,
-                            with_client_exec_str)
-    else:
-        logger.critical(f'Algorithm type {config.algorithm} not supported')
-        sys.exit(1)
+            # This is for optional code to be executed after the Dask client has
+            # been established, but before execution of the EA.  This allows for
+            # things like client.wait_for_workers() or client.upload_file() or the
+            # registering of dask plugins.  This is a string that will be `exec()`
+            # later after a dask client has been connected.
+            # TODO LEAP does not (yet) support Dask for by-generation. Soon!
+            # with_client_exec_str = None if 'with_client' not in config['bygen'] else \
+            #     config['bygen'].with_client
+
+            run_generational_ea(pop_size, max_generations, problem, representation,
+                                pipeline,
+                                config.pop_file, k_elites)
+        else:
+            logger.critical(f'Algorithm type {config.algorithm} not supported')
+            sys.exit(1)
+    except Exception as e:
+        logger.critical(f'Caught {e!s} during run.  Exiting.')
+        console.print_exception()
 
     logger.info('Gremlin finished.')
+
+
+
+if __name__ == '__main__':
+    main()
