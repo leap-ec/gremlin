@@ -27,6 +27,7 @@ import importlib
 
 from omegaconf import OmegaConf
 
+import rich
 from rich.logging import RichHandler
 
 # Create unique logger for this namespace
@@ -43,9 +44,13 @@ from rich.pretty import pprint
 
 pretty.install()
 
-from rich.traceback import install
+rich.traceback.install(show_locals=True)
 
-install()
+from rich.console import Console
+console = Console()
+
+
+
 
 from distributed import Client, LocalCluster
 
@@ -388,7 +393,8 @@ def main():
             logger.critical(f'Algorithm type {config.algorithm} not supported')
             sys.exit(1)
     except Exception as e:
-        print(f'Caught {e!s} during run.  Exiting.')
+        logger.critical(f'Caught {e!s} during run.  Exiting.')
+        console.print_exception()
 
     logger.info('Gremlin finished.')
 

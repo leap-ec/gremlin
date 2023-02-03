@@ -1,0 +1,4 @@
+# A configuration that intentionally breaks a gremlin run to observe how
+# it handles errors/exceptions.
+preamble: |
+  import doesnotexist

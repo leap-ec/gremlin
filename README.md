@@ -11,17 +11,19 @@ perform better for those sets.
 ![2022 R&D 100 Award Winner](RD100_2022_Winner_Logo-small.png) Gremlin is a [2022 R&D 100 Award Winner!](https://www.rdworldonline.com/rd-100-winners-for-2022-are-announced/)
 
 ## Requires
-* Python 3.[78]
-* [LEAP https://github.com/AureumChaos/LEAP](https://github.com/AureumChaos/LEAP)
+* Python >= 3.7.0
+* [LEAP https://github.com/AureumChaos/LEAP/tree/develop](https://github.
+  com/AureumChaos/LEAP/tree/develop) -- **Note that this is for the LEAP
+  `develop` branch.
 
 ## Installation
 
 1. Activate your conda or virtual environment
-2. cd into top-level gremlin directory
+2. `cd` into top-level gremlin directory
 3. `pip install .`
 
 ## Configuration
-Gremlin is essentially a thin convenience wrapper around [LEAP]
+Gremlin is a thin convenience wrapper around [LEAP]
 (https://github.com/AureumChaos/LEAP).  Instead of writing a script in LEAP, 
 one would instead point the `gremlin` executable at a YAML file that describes 
 what LEAP classes, subclasses, and functions to use, as well as other salient 
@@ -42,7 +44,7 @@ async: # parameters for asynchronous steady-state EA
   ind_file_probe: probe.log_ind # optional functor or function for writing ind_file
 
 pop_file: pop.csv # where we will write out each generation in CSV format
-problem: problem.QLearnerBalanceProblem("${env:GREMLIN_QLEARNER_CARTPOLE_MODEL_FPATH}")
+problem: problem.QLearnerBalanceProblem("${oc.env:GREMLIN_QLEARNER_CARTPOLE_MODEL_FPATH}")
 representation: representation.BalanceRepresentation()
 preamble: |
   import probe # need to import our probe.py so that LEAP sees our probe pipeline operator
@@ -86,8 +88,21 @@ This can be run simply by (must be in `examples/MNIST` directory):
 $ gremlin config.yml
 ```
 
+## Documentation
+The [wiki](https://github.com/markcoletti/gremlin/wiki) has more detailed 
+documentation, particularly on how the YAML config files can be set up for 
+Gremlin runs.
+
 ## Versions
 
+Note that more detailed explanations for version changes can be found in the 
+`CHANGELOG`.
+
+* `v0.6`, in progress on `develop`
+* `v0.5`, 2/3/23
+  * Main installed executable now `gremlin` and not `gremlin.py`. Added 
+    optional `async.with_client` config section. Improvements made to `setup.
+    py`.
 * `v0.4`, 9/30/22
   * Added config variable `async.with_client` that allows for interacting 
     with Dask before the EA runs; e.g., `client.wait_for_workers()` or 
@@ -110,5 +125,5 @@ $ gremlin config.yml
 
 ## Main web site
 
-The `gremlin` github repository is https://github.com/markcoletti/gremlin.  `main` is the release branch and 
-active work occurs on the `develop` branch.
+The `gremlin` github repository is https://github.com/markcoletti/gremlin.  
+`main` is the release branch and active work occurs on the `develop` branch.
