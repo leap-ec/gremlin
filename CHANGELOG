@@ -1,3 +1,14 @@
+* `v0.6`, in progress
+
+    Allow for defining Dask Client subclasses, such as SSHCluster or SlurmCluster.
+
+    Re-organized how Dask distributed configuration is handled in YAML files.
+
+    The `bygen` algorithm, which is a traditional by-generational evolutionary
+    algorithm, now supports distributed evaluations.
+
+    Broke out how YAML configuration files are handled into a separate module.
+
 * `v0.5`, 1/27/23
 
     Installed executable now `gremlin` instead of `gremlin.py`.  Compensated
