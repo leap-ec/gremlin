@@ -1,0 +1,9 @@
+#
+# For describing run-time parameters for distributed fitness evaluations
+#
+distributed:
+  with_client: |
+    client.wait_for_workers(1)
+    print('We have at least one workers, so proceeding.')
+  scheduler_file: scheduler.json
+  client: Client(LocalCluster()) # default to using all local cores
