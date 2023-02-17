@@ -1,14 +1,17 @@
 # Gremlin config file for MNIST example
 #
-# config_debug.yml just overrides the pop_size, max_generations, and k_elites
+# debug.yml just overrides the pop_size, max_generations, and k_elites
 #
 # Essentially this is for running with a very small population just to step
 # through the debugger, and also demonstrates how consecutive YAML config files
 # override command-line predecessors.
 #
 # Usage:
-#     $ gremlin.py config.yml config_debug.yml
+#     $ gremlin.py config.yml debug.yml
 pop_size: 1
 bygen: # parameters that only make sense for a by-generation EA
   max_generations: 1
   k_elites: 0
+async: # parameters for asynchronous steady-state EA
+  init_pop_size: 2 # default to pop size, but can be set to the number of dask workers
+  max_births: 4
