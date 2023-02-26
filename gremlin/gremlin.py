@@ -200,7 +200,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
                  pop_file,
                  ind_file,
                  ind_file_probe,
-                 scheduler_file=None,
+                 client_str,
                  with_client_exec_str=None):
     """ evolve solutions that show worse performing feature sets using an
     asynchronous steady state evolutionary algorithm (as opposed to a by-
@@ -224,15 +224,11 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
     :param ind_file_probe: optional function (or functor) for printing out
         individuals to ind_file; if not specified, then
         `leap_ec.distrib.probe.log_worker_location` is used by default
-    :param scheduler_file: optional dask scheduler file; will use cores on local
-        host if none given
+    :param client_str: is the python statement for creating a Dask client
+    :param with_client_exec_str: is optional python code for *after* the client
+        has been spun up, and which allows for installing Dask plugins.
     :returns: None
     """
-    if scheduler_file:
-        logger.debug('Using cluster for dask')
-    else:
-        logger.debug('Using all localhost cores for dask')
-
     track_pop_stream = open(pop_file, 'w')
     track_pop_func = log_pop(pop_size, track_pop_stream)
 
@@ -244,72 +240,39 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
         else:
             track_ind_func = eval(ind_file_probe + '(open(ind_file,"w"))')
 
-    if scheduler_file is None:
-        logger.info('Using local cluster')
-        cluster = LocalCluster(n_workers=multiprocessing.cpu_count(),
-                               threads_per_worker=1,
-                               processes=True,
-                               silence_logs=logger.level)
-        with Client(cluster) as client:
+    client = eval(client_str)
 
-            if with_client_exec_str is not None:
-                # Execute any user supplied code with the client connected.
-                # This allows for tailored plugins, client.upload_file(), and
-                # similar invocations to be handled.  These will be found in the
-                # optional `with_client` sections in Gremlin YAML config files.
-                exec(with_client_exec_str, globals(), locals())
+    logger.debug(f'Dask client: {client!s}')
 
-            # Add a logger that is local to each worker
-            client.register_worker_plugin(WorkerLoggerPlugin())
+    try:
+        if with_client_exec_str is not None:
+            # Execute any user supplied code with the client connected.
+            # This allows for tailored plugins, client.upload_file(), and
+            # similar invocations to be handled.  These will be found in the
+            # optional `with_client` sections in Gremlin YAML config files.
+            exec(with_client_exec_str, globals(), locals())
 
-            final_pop = asynchronous.steady_state(client,
-                                                  max_births=max_births,
-                                                  init_pop_size=init_pop_size,
-                                                  pop_size=pop_size,
+        # Add a logger that is local to each worker
+        client.register_worker_plugin(WorkerLoggerPlugin())
 
-                                                  representation=representation,
+        final_pop = asynchronous.steady_state(client,
+                                              max_births=max_births,
+                                              init_pop_size=init_pop_size,
+                                              pop_size=pop_size,
 
-                                                  problem=problem,
+                                              representation=representation,
 
-                                                  offspring_pipeline=pipeline,
+                                              problem=problem,
 
-                                                  evaluated_probe=track_ind_func,
-                                                  pop_probe=track_pop_func)
+                                              offspring_pipeline=pipeline,
 
-            print('Final pop:')
-            print([str(x) for x in final_pop])
-    else:
-        logger.info('Using remote cluster')
-        with Client(scheduler_file=scheduler_file,
-                    processes=True,
-                    silence_logs=logger.level) as client:
+                                              evaluated_probe=track_ind_func,
+                                              pop_probe=track_pop_func)
 
-            if with_client_exec_str is not None:
-                # Execute any user supplied code with the client connected.
-                # This allows for tailored plugins, client.upload_file(), and
-                # similar invocations to be handled.  These will be found in the
-                # optional `with_client` sections in Gremlin YAML config files.
-                exec(with_client_exec_str, globals(), locals())
-
-            # Add a logger that is local to each worker
-            client.register_worker_plugin(WorkerLoggerPlugin())
-
-            final_pop = asynchronous.steady_state(client,
-                                                  max_births=max_births,
-                                                  init_pop_size=init_pop_size,
-                                                  pop_size=pop_size,
-
-                                                  representation=representation,
-
-                                                  problem=problem,
-
-                                                  offspring_pipeline=pipeline,
-
-                                                  evaluated_probe=track_ind_func,
-                                                  pop_probe=track_pop_func)
-
-            print('Final pop:')
-            print([str(x) for x in final_pop])
+        print('Final pop:')
+        print([str(x) for x in final_pop])
+    finally:
+        client.close()
 
 
 def main():
@@ -376,7 +339,7 @@ def main():
                          config.pop_file,
                          ind_file,
                          ind_file_probe,
-                         scheduler_file,
+                         config.distributed.client,
                          with_client_exec_str)
         elif config.algorithm == 'bygen':
             # default to by generation approach

@@ -5,6 +5,9 @@ distributed:
   with_client: |
     client.wait_for_workers(1)
     print('We have at least one workers, so proceeding.')
-  client: Client(LocalCluster()) # default to using all local cores
+  client: Client(LocalCluster(n_workers=multiprocessing.cpu_count(),
+                               threads_per_worker=1,
+                               processes=True,
+                               silence_logs=logger.level)) # default to using all local cores
 #  scheduler_file: scheduler.json
 #  client: Client(scheduler_file=${scheduler_file}) # Or specify the scheduler file
