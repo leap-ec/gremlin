@@ -40,9 +40,9 @@ logger = logging.getLogger(__name__)
 
 from rich import print
 from rich import pretty
+pretty.install()
 from rich.pretty import pprint
 
-pretty.install()
 
 rich.traceback.install(show_locals=True)
 
@@ -326,19 +326,20 @@ def main():
                               'uses to set up the problem and algorithm'))
     args = parser.parse_args()
 
-    # set logger to debug if flag is set
+    # combine configuration files into one dictionary
+    config = read_config_files(args.config_files)
+    logger.debug(f'Configuration: {OmegaConf.to_container(config, resolve=True)}')
+
+    # set logger to debug if flag is set and print out the details of the
+    # read in configuration
     if args.debug:
+        pretty.pprint(OmegaConf.to_container(config, resolve=True))
         logger.setLevel(logging.DEBUG)
         logger.debug('Logging set to DEBUG.')
 
-    # combine configuration files into one dictionary
-    config = read_config_files(args.config_files)
-    logger.debug(f'Configuration: {config}')
-
     # Import the Problem and Representation classes specified in the
     # config file(s) as well as the LEAP pipeline of operators
-    problem, representation, pipeline = \
-        parse_config(config)
+    problem, representation, pipeline = parse_config(config)
 
     pop_size = int(config.pop_size)
 
