@@ -103,6 +103,11 @@ def parse_config(config):
         # the pipeline
         exec(config.preamble, globals())
 
+    if 'distributed' in config:
+        # Then we have some Dask distributed stuff to pull in
+        if 'client' in config.distributed:
+            globals()['client'] = eval(config.distributed.client)
+
     # The problem and representations will be something like
     # problem.MNIST_Problem, in the config and we just want to import
     # problem. So we snip out "problem" from that string and import that.
@@ -341,8 +346,10 @@ def main():
         if config.algorithm == 'async':
             logger.debug('Using async EA')
 
-            scheduler_file = None if 'scheduler_file' not in config['async'] else \
-            config['async'].scheduler_file
+            # Optionally specified a Dask scheduler file that would be used
+            # to coordinate with workers on remote hosts.  If one isn't given,
+            # then Dask workers will be spun up on localhost.
+            config.get('distributed.scheduler_file', None)
 
             ind_file = None if 'ind_file' not in config['async'] else \
                 config['async'].ind_file
@@ -356,8 +363,7 @@ def main():
             # registering of dask plugins.  This is a string that will be `exec()`
             # later after a dask client has been connected.
             # TODO generalize this to be algorithm agnostic in config file
-            with_client_exec_str = None if 'with_client' not in config['async'] else \
-                config['async'].with_client
+            with_client_exec_str = config.get('distributed.with_client', None)
 
             run_async_ea(pop_size,
                          int(config['async'].init_pop_size),
