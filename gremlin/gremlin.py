@@ -346,10 +346,20 @@ def main():
         if config.algorithm == 'async':
             logger.debug('Using async EA')
 
-            # Optionally specified a Dask scheduler file that would be used
-            # to coordinate with workers on remote hosts.  If one isn't given,
-            # then Dask workers will be spun up on localhost.
-            config.get('distributed.scheduler_file', None)
+            if 'distributed' in config:
+                # Optionally specified a Dask scheduler file that would be
+                # used to coordinate with workers on remote hosts. If one
+                # isn't given, then Dask workers will be spun up on localhost.
+                scheduler_file = config.distributed.get('scheduler_file')
+
+                # This is for optional code to be executed after the Dask
+                # client has been established, but before execution of the
+                # EA.  This allows for things like client.wait_for_workers()
+                # or client.upload_file() or the registering of dask plugins.
+                # This is a string that will be `exec()` later after a dask
+                # client has been connected. TODO generalize this to be
+                # algorithm agnostic in config file
+                with_client_exec_str = config.distributed.get('with_client')
 
             ind_file = None if 'ind_file' not in config['async'] else \
                 config['async'].ind_file
@@ -357,13 +367,6 @@ def main():
             ind_file_probe = None if 'ind_file_probe' not in config['async'] else \
                 config['async'].ind_file_probe
 
-            # This is for optional code to be executed after the Dask client has
-            # been established, but before execution of the EA.  This allows for
-            # things like client.wait_for_workers() or client.upload_file() or the
-            # registering of dask plugins.  This is a string that will be `exec()`
-            # later after a dask client has been connected.
-            # TODO generalize this to be algorithm agnostic in config file
-            with_client_exec_str = config.get('distributed.with_client', None)
 
             run_async_ea(pop_size,
                          int(config['async'].init_pop_size),
