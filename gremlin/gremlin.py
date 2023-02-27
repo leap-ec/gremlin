@@ -63,6 +63,7 @@ from leap_ec.real_rep.ops import mutate_gaussian, genome_mutate_gaussian
 from leap_ec.distrib import DistributedIndividual
 from leap_ec.segmented_rep.ops import add_segment, remove_segment, apply_mutation
 from leap_ec.distrib import asynchronous
+from leap_ec.distrib import synchronous
 from leap_ec.distrib.probe import log_worker_location, log_pop
 from leap_ec.distrib.logger import WorkerLoggerPlugin
 
@@ -128,10 +129,17 @@ def parse_config(config):
 
 def run_generational_ea(pop_size, max_generations, problem, representation,
                         pipeline,
-                        pop_file, k_elites=1):
+                        pop_file, k_elites=1, client=None):
     """ evolve solutions that show worse performing feature sets using a
     by-generation evolutionary algorithm (as opposed to an asynchronous,
     steady state evolutionary algorithm)
+
+    If `client` is set, then we will use parallel fitness evaluations for the
+    initial population.  However, since the user has control of the pipeline
+    then they have to be mindful to use LEAP `distrib.ops.eval_pool()` for
+    parallel evaluations of offspring fitnesses.
+
+    FIXME this puts perhaps an undue burden on the user.
 
     :param pop_size: population size
     :param max_generations: how many generations to run to
@@ -141,6 +149,7 @@ def run_generational_ea(pop_size, max_generations, problem, representation,
     :param pipeline: LEAP operator pipeline to be used in EA
     :param pop_file: where to write the population CSV file
     :param k_elites: keep k elites
+    :param client: optional Dask client
     :returns: None
     """
     with open(pop_file, 'w') as pop_csv_file:
@@ -167,7 +176,10 @@ def run_generational_ea(pop_size, max_generations, problem, representation,
         generation_counter = util.inc_generation(context=context)
 
         # Evaluate initial population
-        parents = representation.individual_cls.evaluate_population(parents)
+        if client is None:
+            parents = representation.individual_cls.evaluate_population(parents)
+        else:
+            parents = synchronous.eval_population(parents, client=client)
 
         print('Best so far:')
         print('Generation, str(individual), fitness')
@@ -310,7 +322,6 @@ def main():
 
     # combine configuration files into one dictionary
     config = read_config_files(args.config_files)
-    logger.debug(f'Configuration: {OmegaConf.to_container(config, resolve=True)}')
 
     # set logger to debug if flag is set and print out the details of the
     # read in configuration

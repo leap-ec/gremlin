@@ -7,7 +7,7 @@
 # override command-line predecessors.
 #
 # Usage:
-#     $ gremlin.py config.yml debug.yml
+#     $ gremlin.py bygen-dist.yml debug.yml
 pop_size: 1
 bygen: # parameters that only make sense for a by-generation EA
   max_generations: 1

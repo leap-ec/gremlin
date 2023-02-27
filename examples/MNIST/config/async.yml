@@ -1,7 +1,7 @@
 #
 # Used for running MNIST example with an asynchronous steady-state EA
 #
-# gremlin.py config.yml async.yml
+# gremlin.py bygen-dist.yml async.yml
 #
 algorithm: async
 async: # parameters for asynchronous steady-state EA
