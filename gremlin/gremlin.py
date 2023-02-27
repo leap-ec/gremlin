@@ -200,8 +200,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
                  pop_file,
                  ind_file,
                  ind_file_probe,
-                 client_str,
-                 with_client_exec_str=None):
+                 client):
     """ evolve solutions that show worse performing feature sets using an
     asynchronous steady state evolutionary algorithm (as opposed to a by-
     generation EA)
@@ -240,21 +239,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
         else:
             track_ind_func = eval(ind_file_probe + '(open(ind_file,"w"))')
 
-    client = eval(client_str)
-
-    logger.debug(f'Dask client: {client!s}')
-
     try:
-        if with_client_exec_str is not None:
-            # Execute any user supplied code with the client connected.
-            # This allows for tailored plugins, client.upload_file(), and
-            # similar invocations to be handled.  These will be found in the
-            # optional `with_client` sections in Gremlin YAML config files.
-            exec(with_client_exec_str, globals(), locals())
-
-        # Add a logger that is local to each worker
-        client.register_worker_plugin(WorkerLoggerPlugin())
-
         final_pop = asynchronous.steady_state(client,
                                               max_births=max_births,
                                               init_pop_size=init_pop_size,
@@ -274,6 +259,40 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
     finally:
         client.close()
 
+
+def get_dask_client(config):
+    """ Open and return a Dask client.
+
+        It is expected that you will close it elsewhere.  Also, if
+        distributed.with_client exists, all python code there will be executed
+        after the client is started to allow for such things as installing
+        plugins and waiting for so many workers to come online.
+
+        :param config: Omegaconf configuration
+        :returns: Active Dask client
+    """
+    if 'distributed' in config:
+        client = eval(config.distributed.client)
+
+        logger.debug(f'Dask client: {client!s}')
+
+        with_client_exec_str = config.distributed.get('with_client')
+
+        if with_client_exec_str is not None:
+            # Execute any user supplied code with the client connected.
+            # This allows for tailored plugins, client.upload_file(), and
+            # similar invocations to be handled.  These will be found in the
+            # optional `with_client` sections in Gremlin YAML config files.
+            exec(with_client_exec_str, globals(), locals())
+
+        # Add a logger that is local to each worker
+        client.register_worker_plugin(WorkerLoggerPlugin())
+
+        return client
+    else:
+        logger.warning(f'There is no "distributed" YAML configuration, which '
+                       f'may be ok if you are not planning on using Dask for '
+                       f'parallel fitness evaluations.')
 
 def main():
     logger.info('Gremlin started')
@@ -304,26 +323,16 @@ def main():
     # config file(s) as well as the LEAP pipeline of operators
     problem, representation, pipeline = parse_config(config)
 
+    # We explicitly cast to an int because the YAML file may have gotten the
+    # value from an environment variable, which means that it'll be treated as
+    # a string instead of a number.  So to make sure we cast to int.
     pop_size = int(config.pop_size)
+
+    client = get_dask_client(config)
 
     try:
         if config.algorithm == 'async':
             logger.debug('Using async EA')
-
-            if 'distributed' in config:
-                # Optionally specified a Dask scheduler file that would be
-                # used to coordinate with workers on remote hosts. If one
-                # isn't given, then Dask workers will be spun up on localhost.
-                scheduler_file = config.distributed.get('scheduler_file')
-
-                # This is for optional code to be executed after the Dask
-                # client has been established, but before execution of the
-                # EA.  This allows for things like client.wait_for_workers()
-                # or client.upload_file() or the registering of dask plugins.
-                # This is a string that will be `exec()` later after a dask
-                # client has been connected. TODO generalize this to be
-                # algorithm agnostic in config file
-                with_client_exec_str = config.distributed.get('with_client')
 
             ind_file = None if 'ind_file' not in config['async'] else \
                 config['async'].ind_file
@@ -339,8 +348,7 @@ def main():
                          config.pop_file,
                          ind_file,
                          ind_file_probe,
-                         config.distributed.client,
-                         with_client_exec_str)
+                         client)
         elif config.algorithm == 'bygen':
             # default to by generation approach
             logger.debug('Using by-generation EA')
