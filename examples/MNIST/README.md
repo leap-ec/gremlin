@@ -21,9 +21,7 @@ To apply Gremlin to this training set you will have to:
 
 ## Contents
 
-* `async.yml` -- how to run Gremlin as an asynchronous steady-state EA
-* `config.yml` -- Gremlin configuration file to define how it will run things
-* `config_debug.yml` -- debug configuration to use with config.yml
+
 * `individual.py` -- This is an optional file where we just define a way to 
   pretty print individuals and to track eval times.
 * `probe.py` -- Another optional file where we define a LEAP pipeline 
@@ -38,6 +36,7 @@ To apply Gremlin to this training set you will have to:
 * `train.py` - Used to train the MNIST model; intentionally will damage the 
   training data such that we arbitrarily reduce the training instances for 
   '3' such that Gremlin is able to discover that deficiency.
+* `config/` -- directory of various YAML configuration scripts
 
 ## Anticipated questions
 
