@@ -1,0 +1,19 @@
+# Gremlin config file for MNIST example.
+#
+# This is for a serial by-generation configuration whereby progress is made
+# generation by generation and fitness evaluations are done serially.
+
+algorithm: bygen
+bygen: # parameters that only make sense for a by-generation EA
+  max_generations: 5
+  k_elites: 2 # optional parameter for specifying the number (k) elites we keep per generation
+
+pop_file: pop.csv # where we will write out each generation in CSV format
+
+pipeline:
+  - ops.tournament_selection
+  - ops.clone
+  - mutate_randint(expected_num_mutations=1, bounds=representation.MNISTRepresentation.genome_bounds)
+  - ops.evaluate
+  - probe.IndividualProbeCSV('inds.csv') # our own probe to see every single created offspring
+  - ops.pool(size=${pop_size})

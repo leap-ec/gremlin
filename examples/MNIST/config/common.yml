@@ -1,0 +1,9 @@
+# Options common to both by-generation and asynchronous run configurations.
+
+preamble: |
+  import probe # need to import our probe.py so that LEAP sees our probe pipeline operator
+
+problem: problem.MNISTProblem()
+representation: representation.MNISTRepresentation()
+
+pop_size: 7
