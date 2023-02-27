@@ -201,10 +201,11 @@ def run_generational_ea(pop_size, max_generations, problem, representation,
                 bsf = max(offspring)
 
             parents = offspring  # Replace parents with offspring
-            generation_counter()  # Increment to the next generation
 
             # Output the best-so-far individual for each generation
             print(generation_counter.generation(), bsf)
+
+            generation_counter()  # Increment to the next generation
 
 
 def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
