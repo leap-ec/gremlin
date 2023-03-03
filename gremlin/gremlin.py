@@ -94,9 +94,12 @@ def parse_config(config):
     """ Extract the population size, maximum generations to run, the Problem
     subclass, and the Representation subclass from the given `config` object.
 
+    As side-effect will instantiate `distribued.client` as Dask client.  Also
+    anything in `config.preamble` will be exec()'d into the global space.
+
     :param config: OmegaConf configurations read from YAML files
-    :returns: Problem objects, Representation objects, LEAP pipeline operators,
-        and optional with_client_exec_str
+    :returns: Problem objects and Representation object and LEAP pipeline
+        operators, as well as optional with_client_exec_str
     """
 
     if 'preamble' in config:
@@ -121,14 +124,11 @@ def parse_config(config):
     problem_obj = eval(config.problem)
     representation_obj = eval(config.representation)
 
-    # Eval each pipeline function to build the LEAP operator pipeline
-    pipeline = [eval(x) for x in config.pipeline]
-
-    return problem_obj, representation_obj, pipeline
+    return problem_obj, representation_obj
 
 
 def run_generational_ea(pop_size, max_generations, problem, representation,
-                        pipeline,
+                        pipeline_list,
                         pop_file, k_elites=1, client=None):
     """ evolve solutions that show worse performing feature sets using a
     by-generation evolutionary algorithm (as opposed to an asynchronous,
@@ -146,7 +146,7 @@ def run_generational_ea(pop_size, max_generations, problem, representation,
     :param problem: LEAP Problem subclass that encapsulates how to
         exercise a given model
     :param representation: how we represent features sets for the model
-    :param pipeline: LEAP operator pipeline to be used in EA
+    :param pipeline_list: strings of python for LEAP operator pipeline
     :param pop_file: where to write the population CSV file
     :param k_elites: keep k elites
     :param client: optional Dask client
@@ -189,6 +189,10 @@ def run_generational_ea(pop_size, max_generations, problem, representation,
         pop_probe(parents)  # print out the parents and increment gen counter
         generation_counter()
 
+        # Eval each pipeline function to build the LEAP operator pipeline
+        pipeline = [eval(x, globals(), {'parents': parents})
+                    for x in pipeline_list]
+
         while (generation_counter.generation() < max_generations):
             # Execute the operators to create a new offspring population
             offspring = pipe(parents, *pipeline,
@@ -209,7 +213,7 @@ def run_generational_ea(pop_size, max_generations, problem, representation,
 
 
 def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
-                 pipeline,
+                 pipeline_list,
                  pop_file,
                  ind_file,
                  ind_file_probe,
@@ -227,7 +231,7 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
     :param problem: LEAP Problem subclass that encapsulates how to
         exercise a given model
     :param representation: how we represent features sets for the model
-    :param pipeline: LEAP operator pipeline to be used to create a
+    :param pipeline_list: string of LEAP operator pipeline to be used to create a
         **single offspring**
     :param pop_file: where to write the CSV file of snapshot of population
         given every `pop_size` births
@@ -253,6 +257,9 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
             track_ind_func = eval(ind_file_probe + '(open(ind_file,"w"))')
 
     try:
+        # Eval each pipeline function to build the LEAP operator pipeline
+        pipeline = [eval(x) for x in pipeline_list]
+
         final_pop = asynchronous.steady_state(client,
                                               max_births=max_births,
                                               init_pop_size=init_pop_size,
@@ -333,7 +340,7 @@ def main():
 
     # Import the Problem and Representation classes specified in the
     # config file(s) as well as the LEAP pipeline of operators
-    problem, representation, pipeline = parse_config(config)
+    problem, representation = parse_config(config)
 
     # We explicitly cast to an int because the YAML file may have gotten the
     # value from an environment variable, which means that it'll be treated as
@@ -356,7 +363,7 @@ def main():
             run_async_ea(pop_size,
                          int(config['async'].init_pop_size),
                          int(config['async'].max_births),
-                         problem, representation, pipeline,
+                         problem, representation, config.pipeline,
                          config.pop_file,
                          ind_file,
                          ind_file_probe,
@@ -380,7 +387,7 @@ def main():
             #     config['bygen'].with_client
 
             run_generational_ea(pop_size, max_generations, problem, representation,
-                                pipeline,
+                                config.pipeline,
                                 config.pop_file, k_elites)
         else:
             logger.critical(f'Algorithm type {config.algorithm} not supported')
