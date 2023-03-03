@@ -1,17 +1,15 @@
-# Gremlin config file for MNIST example
+# Gremlin config file for MNIST example.
 #
-# Usage:
-#     $ gremlin.py config.yml
-pop_size: 7
+# This is for a serial by-generation configuration whereby progress is made
+# generation by generation and fitness evaluations are done serially.
+
 algorithm: bygen
 bygen: # parameters that only make sense for a by-generation EA
   max_generations: 5
   k_elites: 2 # optional parameter for specifying the number (k) elites we keep per generation
-problem: problem.MNISTProblem()
-representation: representation.MNISTRepresentation()
+
 pop_file: pop.csv # where we will write out each generation in CSV format
-preamble: |
-  import probe # need to import our probe.py so that LEAP sees our probe pipeline operator
+
 pipeline:
   - ops.tournament_selection
   - ops.clone
