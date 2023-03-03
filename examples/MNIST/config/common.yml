@@ -7,3 +7,5 @@ problem: problem.MNISTProblem()
 representation: representation.MNISTRepresentation()
 
 pop_size: 7
+
+pop_file: pops.csv
