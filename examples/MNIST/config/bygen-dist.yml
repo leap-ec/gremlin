@@ -1,0 +1,12 @@
+# Gremlin config file for MNIST example
+#
+# Usage:
+#     $ gremlin.py bygen.yml bygen-dist.yml
+
+# We need to update the pipeline defined in bygen.yml to allow for distributed
+# fitness evaluations of offspring.
+pipeline:
+  - ops.tournament_selection
+  - ops.clone
+  - mutate_randint(expected_num_mutations=1, bounds=representation.MNISTRepresentation.genome_bounds)
+  - synchronous.eval_pool(client=client, size=len(parents))
