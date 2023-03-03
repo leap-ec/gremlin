@@ -211,6 +211,9 @@ def run_generational_ea(pop_size, max_generations, problem, representation,
 
             generation_counter()  # Increment to the next generation
 
+        if client is not None:
+            client.close()
+
 
 def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
                  pipeline_list,
