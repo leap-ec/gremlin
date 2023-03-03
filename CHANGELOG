@@ -1,14 +1,18 @@
-* `v0.6`, in progress
+* `v0.6`, 3/3/23
 
-    Allow for defining Dask Client subclasses, such as SSHCluster or SlurmCluster.
+    Allow for using Dask Client subclasses, such as SSHCluster or SlurmCluster,
+    which should make easier to deploy on clusters, supercomputers, and in
+    the cloud.
 
     Re-organized how Dask distributed configuration is handled in YAML files.
 
     The `bygen` algorithm, which is a traditional by-generational evolutionary
-    algorithm, now supports distributed evaluations. One can also refer to the
-    `parents` in pipeline operators.
+    algorithm, now supports distributed evaluations via Dask. One can also refer
+    to the `parents` in pipeline operators; e.g., this is useful for
+    truncation selection, which needs to take the best of offspring and parents.
 
-    Broke out how YAML configuration files are handled into a separate module.
+    Broke out how YAML configuration files are handled into separate modules.
+    See `examples/MNIST/run.sh` for examples.
 
 * `v0.5`, 1/27/23
 
