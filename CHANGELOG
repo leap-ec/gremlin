@@ -1,3 +1,7 @@
+* `v0.7dev`, in progress
+
+    Adding support for multi-objective search via LEAP's NSGA-II support.
+
 * `v0.6`, 3/3/23
 
     Allow for using Dask Client subclasses, such as SSHCluster or SlurmCluster,
