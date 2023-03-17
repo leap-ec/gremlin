@@ -220,7 +220,8 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
                  pop_file,
                  ind_file,
                  ind_file_probe,
-                 client):
+                 client,
+                 count_nonviable=False):
     """ evolve solutions that show worse performing feature sets using an
     asynchronous steady state evolutionary algorithm (as opposed to a by-
     generation EA)
@@ -243,9 +244,9 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
     :param ind_file_probe: optional function (or functor) for printing out
         individuals to ind_file; if not specified, then
         `leap_ec.distrib.probe.log_worker_location` is used by default
-    :param client_str: is the python statement for creating a Dask client
-    :param with_client_exec_str: is optional python code for *after* the client
-        has been spun up, and which allows for installing Dask plugins.
+    :param client: an open Dask Client
+    :param count_nonviable: if true, count non-viable individuals towards the
+        birth budget
     :returns: None
     """
     track_pop_stream = open(pop_file, 'w')
@@ -275,7 +276,9 @@ def run_async_ea(pop_size, init_pop_size, max_births, problem, representation,
                                               offspring_pipeline=pipeline,
 
                                               evaluated_probe=track_ind_func,
-                                              pop_probe=track_pop_func)
+                                              pop_probe=track_pop_func,
+
+                                              count_nonviable=count_nonviable)
 
         print('Final pop:')
         print([str(x) for x in final_pop])
@@ -362,6 +365,8 @@ def main():
             ind_file_probe = None if 'ind_file_probe' not in config['async'] else \
                 config['async'].ind_file_probe
 
+            count_nonviable = False if 'count_nonviable' not in config['async'] else \
+                config['async'].count_nonviable
 
             run_async_ea(pop_size,
                          int(config['async'].init_pop_size),
@@ -370,7 +375,8 @@ def main():
                          config.pop_file,
                          ind_file,
                          ind_file_probe,
-                         client)
+                         client,
+                         count_nonviable=count_nonviable)
         elif config.algorithm == 'bygen':
             # default to by generation approach
             logger.debug('Using by-generation EA')
