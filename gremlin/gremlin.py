@@ -365,7 +365,7 @@ def main():
             ind_file_probe = None if 'ind_file_probe' not in config['async'] else \
                 config['async'].ind_file_probe
 
-            count_nonviable = False if 'count_nonviable' not in config['config'] else \
+            count_nonviable = False if 'count_nonviable' not in config['async'] else \
                 config['async'].count_nonviable
 
             run_async_ea(pop_size,
