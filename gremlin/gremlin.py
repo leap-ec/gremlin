@@ -295,7 +295,8 @@ def get_dask_client(config):
         plugins and waiting for so many workers to come online.
 
         :param config: Omegaconf configuration
-        :returns: Active Dask client
+        :returns: Active Dask client or None if there is no `distributed`
+            section
     """
     if 'distributed' in config:
         client = eval(config.distributed.client)
@@ -319,6 +320,9 @@ def get_dask_client(config):
         logger.warning(f'There is no "distributed" YAML configuration, which '
                        f'may be ok if you are not planning on using Dask for '
                        f'parallel fitness evaluations.')
+
+    # No distributed section in which a Client is specified
+    return None
 
 def main():
     logger.info('Gremlin started')
