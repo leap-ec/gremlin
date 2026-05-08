@@ -12,8 +12,7 @@ perform better for those sets.
 
 ## Requires
 * Python >= 3.7.0
-* [LEAP https://github.com/AureumChaos/LEAP/tree/develop](https://github.
-  com/AureumChaos/LEAP/tree/develop) -- **Note that this is for the LEAP
+* [LEAP [https://github.com/leap-ec/LEAP/tree/develop](https://github.com/leap-ec/LEAP/tree/develop) -- **Note that this is for the LEAP
   `develop` branch.
 
 ## Installation
